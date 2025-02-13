@@ -6,5 +6,10 @@ public class Main {
     public static void main(String[] args) {
         Game game = new Game();
         game.start();
+<<<<<<< HEAD
+=======
+        game.pannel("El Madrid ha ganado al City");
+        game.spinWheel();
+>>>>>>> master
     }
 }
