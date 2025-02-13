@@ -9,13 +9,10 @@ public class Console {
     public static void showMessage(String message) {
         System.out.println(message);
     }
-<<<<<<< HEAD
-=======
     
     public static void showMessageInLine(String message) {
         System.out.print(message);
     }
->>>>>>> master
 
     public static List<Player> registerPlayers() {
         List<Player> players = new ArrayList<>();
@@ -27,8 +24,6 @@ public class Console {
         }
         return players;
     }
-<<<<<<< HEAD
-=======
     
     public static int pannelCounter(String frase) {
     	int letters = 0;
@@ -42,5 +37,4 @@ public class Console {
     	return letters;
     }
     
->>>>>>> master
 }
