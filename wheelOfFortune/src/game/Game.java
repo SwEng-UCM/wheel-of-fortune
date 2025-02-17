@@ -5,49 +5,104 @@ import ui.Console;
 import utils.InputHelper;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
 
 public class Game {
     private List<Player> players;
     private int NumWords;
-    private int currentPlayerIndex; // Track the current player's turn
+    private int currentPlayerIndex;
+    private List<String> phrases;
 
     public Game() {
         players = new ArrayList<>();
         NumWords = 0;
         currentPlayerIndex = 0;
+        phrases = new ArrayList<>();
+        loadPhrasesFromFile("phrases.txt");
+    }
+
+    private void loadPhrasesFromFile(String fileName) {
+        File file = new File(fileName);
+
+        if (!file.exists()) {
+            Console.showMessage("❌ ERROR: The file " + fileName + " does not exist in the directory.");
+            return;
+        }
+
+        try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                if (!line.trim().isEmpty()) {
+                    phrases.add(line.trim());
+                }
+            }
+        } catch (IOException e) {
+            Console.showMessage("❌ Error loading phrases: " + e.getMessage());
+        }
     }
 
     public void start() {
-        Console.showMessage("Welcome to the Wheel of Fortune game!");
+        Console.clearScreen();
+        Console.showBanner();
+        Console.showMessage("\n🎮 WELCOME TO THE WHEEL OF FORTUNE GAME! 🎮\n");
         players = Console.registerPlayers();
-        Console.showMessage("Players registered successfully!");
-        assignTurn(); // Assign the first turn automatically
+        Console.showMessage("\n✅ Players registered successfully!\n");
+        assignTurn();
+        startGameRound();
+    }
+
+    public void startGameRound() {
+        if (phrases.isEmpty()) {
+            Console.showMessage("⚠ No phrases available. Please check the file.");
+            return;
+        }
+        String selectedPhrase = getRandomPhrase();
+        pannel(selectedPhrase);
+        spinWheel();
+    }
+
+    private String getRandomPhrase() {
+        Random random = new Random();
+        return phrases.get(random.nextInt(phrases.size()));
     }
 
     public void pannel(String frase) {
-        NumWords = Console.pannelCounter(frase);
-        Console.showMessage("This panel contains " + NumWords + " words");
-        for (int i = 0; i < NumWords; i++) {
+        Console.showMessage("\n🎭 THE SECRET PHRASE 🎭\n");
+        Console.showMessage("This panel contains " + frase.length() + " characters\n");
+
+        String separator = "━".repeat(frase.length() * 3 + 1);  // Ajusta el ancho a la frase
+
+        Console.showMessage(separator); // Línea superior
+
+        for (int i = 0; i < frase.length(); i++) {
             if (frase.charAt(i) != ' ') {
-                Console.showMessageInLine("|_|");
+                Console.showMessageInLine("|_| ");
             } else {
-                Console.showMessageInLine(" ");
+                Console.showMessageInLine("   ");
             }
         }
-        askForLetter(); // Prompt for a letter to confirm turn change
-        nextTurn(); // Move to the next player's turn
+
+        Console.showMessage(""); // Salto de línea
+        Console.showMessage(separator); // Línea inferior
+
+        askForLetter();
+        nextTurn();
     }
 
     public void spinWheel() {
-        Console.showMessage("Spin the wheel!!!");
-        askForLetter(); // Prompt for a letter to confirm turn change
-        nextTurn(); // Move to the next player's turn
+        Console.showMessage("\n🎡 SPIN THE WHEEL!!! 🎡\n");
+        askForLetter();
+        nextTurn();
     }
 
     public void assignTurn() {
         if (!players.isEmpty()) {
             Player currentPlayer = players.get(currentPlayerIndex);
-            Console.showMessage("It's " + currentPlayer.getName() + "'s turn!");
+            Console.showMessage("\n🎯 It's " + currentPlayer.getName() + "'s turn! 🎯\n");
         }
     }
 
@@ -59,7 +114,6 @@ public class Game {
     }
 
     private void askForLetter() {
-        Console.showMessage("Please enter a letter (this does nothing, just for turn validation):");
-        InputHelper.getText("Enter a letter: "); // Simulate asking for user input
+        InputHelper.getText("\n🔠 Enter a letter: ");
     }
 }
