@@ -16,12 +16,14 @@ public class Game {
     private int NumWords;
     private int currentPlayerIndex;
     private List<String> phrases;
+    private List<String> slices;
 
     public Game() {
         players = new ArrayList<>();
         NumWords = 0;
         currentPlayerIndex = 0;
         phrases = new ArrayList<>();
+        slices = new ArrayList<>();
         loadPhrasesFromFile("phrases.txt");
     }
 
@@ -94,11 +96,45 @@ public class Game {
     }
 
     public void spinWheel() {
-        Console.showMessage("\n🎡 SPIN THE WHEEL!!! 🎡\n");
+        String slice;
+    	Console.showMessage("\n🎡 SPIN THE WHEEL!!! 🎡\n");
+    	loadSlices("slices.txt");
+        slice = randomSlice();
+        Console.showMessage(slice);
         askForLetter();
         nextTurn();
     }
 
+    
+    private String randomSlice() {
+    	if(slices != null && !slices.isEmpty()) {
+	    	Random random = new Random();
+	    	return slices.get(random.nextInt(slices.size()));
+    	} else {
+    		throw new IllegalStateException("The list is yet to be initializised"); 
+    	}
+    }
+    
+    private void loadSlices(String fileName) {
+        File file = new File(fileName);
+
+        if (!file.exists()) {
+            Console.showMessage("❌ ERROR: The file " + fileName + " does not exist in the directory.");
+            return;
+        }
+
+        try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                if (!line.trim().isEmpty()) {
+                    slices.add(line.trim());
+                }
+            }
+        } catch (IOException e) {
+            Console.showMessage("❌ Error loading phrases: " + e.getMessage());
+        }
+    }
+    
     public void assignTurn() {
         if (!players.isEmpty()) {
             Player currentPlayer = players.get(currentPlayerIndex);
