@@ -13,18 +13,17 @@ import java.io.IOException;
 
 public class Game {
     private List<Player> players;
-    private int NumWords;
     private int currentPlayerIndex;
     private List<String> phrases;
     private List<String> slices;
 
     public Game() {
         players = new ArrayList<>();
-        NumWords = 0;
         currentPlayerIndex = 0;
         phrases = new ArrayList<>();
         slices = new ArrayList<>();
         loadPhrasesFromFile("phrases.txt");
+        loadSlices("slices.txt"); // Carga de slices una sola vez
     }
 
     private void loadPhrasesFromFile(String fileName) {
@@ -47,74 +46,6 @@ public class Game {
         }
     }
 
-    public void start() {
-        Console.clearScreen();
-        Console.showBanner();
-        Console.showMessage("\n🎮 WELCOME TO THE WHEEL OF FORTUNE GAME! 🎮\n");
-        players = Console.registerPlayers();
-        Console.showMessage("\n✅ Players registered successfully!\n");
-        assignTurn();
-        startGameRound();
-    }
-
-    public void startGameRound() {
-        if (phrases.isEmpty()) {
-            Console.showMessage("⚠ No phrases available. Please check the file.");
-            return;
-        }
-        String selectedPhrase = getRandomPhrase();
-        pannel(selectedPhrase);
-        spinWheel();
-    }
-
-    private String getRandomPhrase() {
-        Random random = new Random();
-        return phrases.get(random.nextInt(phrases.size()));
-    }
-
-    public void pannel(String frase) {
-        Console.showMessage("\n🎭 THE SECRET PHRASE 🎭\n");
-        Console.showMessage("This panel contains " + frase.length() + " characters\n");
-
-        String separator = "━".repeat(frase.length() * 3 + 1);  // Ajusta el ancho a la frase
-
-        Console.showMessage(separator); // Línea superior
-
-        for (int i = 0; i < frase.length(); i++) {
-            if (frase.charAt(i) != ' ') {
-                Console.showMessageInLine("|_| ");
-            } else {
-                Console.showMessageInLine("   ");
-            }
-        }
-
-        Console.showMessage(""); // Salto de línea
-        Console.showMessage(separator); // Línea inferior
-
-        askForLetter();
-        nextTurn();
-    }
-
-    public void spinWheel() {
-        String slice;
-    	Console.showMessage("\n🎡 SPIN THE WHEEL!!! 🎡\n");
-    	loadSlices("slices.txt");
-        slice = randomSlice();
-        Console.showMessage(slice);
-        askForLetter();
-        nextTurn();
-    }
-
-    
-    private String randomSlice() {
-    	if(slices != null && !slices.isEmpty()) {
-	    	Random random = new Random();
-	    	return slices.get(random.nextInt(slices.size()));
-    	} else {
-    		throw new IllegalStateException("The list is yet to be initializised"); 
-    	}
-    }
-    
     private void loadSlices(String fileName) {
         File file = new File(fileName);
 
@@ -131,25 +62,128 @@ public class Game {
                 }
             }
         } catch (IOException e) {
-            Console.showMessage("❌ Error loading phrases: " + e.getMessage());
+            Console.showMessage("❌ Error loading slices: " + e.getMessage());
         }
     }
-    
+
+    public void start() {
+        Console.clearScreen();
+        Console.showBanner();
+        Console.showMessage("\n🎮 WELCOME TO THE WHEEL OF FORTUNE GAME! 🎮\n");
+        players = Console.registerPlayers();
+        Console.showMessage("\n✅ Players registered successfully!\n");
+        startGameRound();
+    }
+
+    public void startGameRound() {
+        if (phrases.isEmpty()) {
+            Console.showMessage("⚠ No phrases available. Please check the file.");
+            return;
+        }
+
+        String selectedPhrase = getRandomPhrase();
+
+        // Inicializa el panel con '_' para letras y espacios en blanco donde corresponda
+        char[] revealed = new char[selectedPhrase.length()];
+        for (int i = 0; i < selectedPhrase.length(); i++) {
+            if (selectedPhrase.charAt(i) == ' ') {
+                revealed[i] = ' ';
+            } else {
+                revealed[i] = '_';
+            }
+        }
+
+        // Bucle principal del juego
+        while (!isPhraseComplete(revealed)) {
+            // Muestra el estado actual de la frase oculta
+            displayPanel(revealed);
+            // Indica de quién es el turno
+            assignTurn();
+
+            // El jugador actual gira la ruleta
+            InputHelper.getText("\nPress Enter to spin the wheel...");
+            String sliceResult = randomSlice();
+            Console.showMessage("\n🎡 SPIN THE WHEEL!!! 🎡\n" + sliceResult);
+
+            // Solicita la letra al jugador actual
+            String guess = InputHelper.getText("\n🔠 " + getCurrentPlayerName() + ", enter a letter: ");
+            if (guess.length() != 1) {
+                Console.showMessage("Please enter a single letter.");
+                continue; // Permite reintentar el turno actual
+            }
+            char guessedLetter = Character.toUpperCase(guess.charAt(0));
+            boolean correctGuess = false;
+
+            // Actualiza el panel si la letra se encuentra en la frase
+            for (int i = 0; i < selectedPhrase.length(); i++) {
+                char originalChar = selectedPhrase.charAt(i);
+                if (Character.toUpperCase(originalChar) == guessedLetter && revealed[i] == '_') {
+                    revealed[i] = originalChar;
+                    correctGuess = true;
+                }
+            }
+            if (correctGuess) {
+                Console.showMessage("Good job! The letter " + guessedLetter + " is in the phrase.");
+            } else {
+                Console.showMessage("Sorry, the letter " + guessedLetter + " is not in the phrase.");
+                // Si falla, se pasa al siguiente turno
+                nextTurn();
+            }
+        }
+        // Se muestra el panel final y se felicita al ganador
+        displayPanel(revealed);
+        Console.showMessage("\n🎉 Congratulations! The phrase is complete: " + selectedPhrase);
+    }
+
+    private boolean isPhraseComplete(char[] revealed) {
+        for (char c : revealed) {
+            if (c == '_') {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private void displayPanel(char[] revealed) {
+        Console.showMessage("\n🎭 THE SECRET PHRASE 🎭");
+        StringBuilder panel = new StringBuilder();
+        for (char c : revealed) {
+            panel.append(c).append(' ');
+        }
+        Console.showMessage(panel.toString());
+    }
+
+    private String getRandomPhrase() {
+        Random random = new Random();
+        return phrases.get(random.nextInt(phrases.size()));
+    }
+
+    private String randomSlice() {
+        if (slices != null && !slices.isEmpty()) {
+            Random random = new Random();
+            return slices.get(random.nextInt(slices.size()));
+        } else {
+            throw new IllegalStateException("The slices list is not initialized.");
+        }
+    }
+
     public void assignTurn() {
         if (!players.isEmpty()) {
             Player currentPlayer = players.get(currentPlayerIndex);
-            Console.showMessage("\n🎯 It's " + currentPlayer.getName() + "'s turn! 🎯\n");
+            Console.showMessage("\n🎯 It's " + currentPlayer.getName() + "'s turn! 🎯");
         }
     }
 
     public void nextTurn() {
         if (!players.isEmpty()) {
             currentPlayerIndex = (currentPlayerIndex + 1) % players.size();
-            assignTurn();
         }
     }
 
-    private void askForLetter() {
-        InputHelper.getText("\n🔠 Enter a letter: ");
+    private String getCurrentPlayerName() {
+        if (!players.isEmpty()) {
+            return players.get(currentPlayerIndex).getName();
+        }
+        return "Unknown";
     }
 }
