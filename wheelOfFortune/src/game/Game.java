@@ -153,12 +153,12 @@ public class Game {
         Console.showMessage(panel.toString());
     }
 
-    private String getRandomPhrase() {
+    public String getRandomPhrase() {
         Random random = new Random();
         return phrases.get(random.nextInt(phrases.size()));
     }
 
-    private String randomSlice() {
+    public String randomSlice() {
         if (slices != null && !slices.isEmpty()) {
             Random random = new Random();
             return slices.get(random.nextInt(slices.size()));
@@ -180,7 +180,7 @@ public class Game {
         }
     }
 
-    private String getCurrentPlayerName() {
+    public String getCurrentPlayerName() {
         if (!players.isEmpty()) {
             return players.get(currentPlayerIndex).getName();
         }
