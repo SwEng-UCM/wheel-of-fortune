@@ -198,4 +198,9 @@ public class Game {
         }
         return "Unknown";
     }
+    
+    public void addPlayer(Player player) {
+        players.add(player);
+    }
+
 }

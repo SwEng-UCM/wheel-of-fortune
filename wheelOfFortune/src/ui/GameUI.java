@@ -1,6 +1,7 @@
 package ui;
 
 import game.Game;
+import players.Player;
 import ui.panels.TopPanel;
 import ui.panels.CenterPanel;
 import ui.panels.BottomPanel;
@@ -32,11 +33,12 @@ public class GameUI extends JFrame {
         setLayout(new BorderLayout(10, 10));
         setSize(800, 500);
 
-        // 1. Inicializar la lógica y el estado del juego
-        this.game = new Game();         // Carga frases, slices, etc.
-        initGameState();                // Selecciona la frase y crea el array revealed
+        this.game = new Game();  // 🔹 Inicializar lógica del juego
+        registerPlayers();       // 🔹 Pedir los jugadores antes de iniciar
 
-        // 2. Crear e incorporar los paneles
+        initGameState();         // 🔹 Inicializar el estado del juego
+
+        // Crear e incorporar los paneles
         topPanel = new TopPanel(this);
         add(topPanel, BorderLayout.NORTH);
 
@@ -46,11 +48,12 @@ public class GameUI extends JFrame {
         bottomPanel = new BottomPanel(this);
         add(bottomPanel, BorderLayout.SOUTH);
 
-        updateUIState(); // Muestra el estado inicial (frase oculta, jugador actual)
+        updateUIState(); // 🔹 Mostrar el jugador actual correctamente
 
         setLocationRelativeTo(null);
         setVisible(true);
     }
+
 
     /**
      * Selecciona la frase y prepara el array 'revealed' con '_'.
@@ -95,8 +98,9 @@ public class GameUI extends JFrame {
      */
     public void updateUIState() {
         topPanel.updatePhraseLabel();
-        centerPanel.updateCurrentPlayer();
+        centerPanel.updateCurrentPlayer();  // 🔹 Asegurar que se actualiza el turno en la UI
     }
+
 
     /**
      * Comprueba si la frase está completamente descubierta.
@@ -124,17 +128,44 @@ public class GameUI extends JFrame {
             }
         }
     }
+    
+    private void registerPlayers() {
+        int numPlayers = -1;
+        
+        // Pedir número de jugadores (mínimo 2)
+        while (numPlayers < 2) {
+            String input = JOptionPane.showInputDialog(this, "Enter the number of players (minimum 2):");
+            try {
+                numPlayers = Integer.parseInt(input);
+                if (numPlayers < 2) {
+                    JOptionPane.showMessageDialog(this, "You need at least 2 players!", "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            } catch (NumberFormatException e) {
+                JOptionPane.showMessageDialog(this, "Invalid number. Try again.", "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+
+        // Registrar los jugadores
+        for (int i = 0; i < numPlayers; i++) {
+            String playerName;
+            do {
+                playerName = JOptionPane.showInputDialog(this, "Enter name for Player " + (i + 1) + ":");
+            } while (playerName == null || playerName.trim().isEmpty());
+
+            game.addPlayer(new Player(playerName)); // 🔹 Agregar jugadores al juego
+        }
+    }
+
 
     /**
      * Método para adivinar una letra. Devuelve true si fue correcta.
      */
     public boolean guessLetter(String guessText) {
-        if (gameOver || !hasSpun) return false; // Si ya terminó o no ha girado, no hacemos nada
+        if (gameOver || !hasSpun) return false;
 
         char guessedLetter = guessText.charAt(0);
         boolean correctGuess = false;
 
-        // Actualiza el panel según la letra
         for (int i = 0; i < selectedPhrase.length(); i++) {
             char originalChar = selectedPhrase.charAt(i);
             if (Character.toUpperCase(originalChar) == guessedLetter && revealed[i] == '_') {
@@ -145,21 +176,19 @@ public class GameUI extends JFrame {
 
         if (correctGuess) {
             bottomPanel.appendMessage("✔ Good! Letter '" + guessedLetter + "' is in the phrase.");
-            updateUIState();
-
+            updateUIState();  // 🔹 Asegurar que la interfaz se actualiza
             if (isPhraseComplete()) {
                 bottomPanel.appendMessage("🎉 Congratulations! The phrase is: " + selectedPhrase);
                 gameOver = true;
             }
         } else {
             bottomPanel.appendMessage("✖ Letter '" + guessedLetter + "' is not in the phrase. Next player!");
-            // Pasa al siguiente jugador
             game.nextTurn();
+            updateUIState();  // 🔹 🔥 Aquí agregamos la actualización del turno
         }
 
-        // Resetea turno si acierta o falla
         hasSpun = false;
-        updateUIState();
+        updateUIState(); // 🔹 Asegurar que se refleja correctamente el nuevo turno
         return correctGuess;
     }
 

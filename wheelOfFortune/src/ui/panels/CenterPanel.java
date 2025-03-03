@@ -73,6 +73,7 @@ public class CenterPanel extends JPanel {
         currentPlayerLabel.setText("Turn: " + currentPlayer);
     }
 
+
     /**
      * Habilita o deshabilita botones según el estado del juego.
      */
