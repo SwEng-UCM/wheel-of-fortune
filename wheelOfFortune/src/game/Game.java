@@ -103,6 +103,7 @@ public class Game {
             // El jugador actual gira la ruleta
             InputHelper.getText("\nPress Enter to spin the wheel...");
             String sliceResult = randomSlice();
+            int wheelValue = getSliceValue(sliceResult);
             Console.showMessage("\n🎡 SPIN THE WHEEL!!! 🎡\n" + sliceResult);
 
             // Solicita la letra al jugador actual
@@ -123,7 +124,10 @@ public class Game {
                 }
             }
             if (correctGuess) {
+                Player currentPlayer = players.get(currentPlayerIndex);
+                currentPlayer.addMoney(wheelValue); // Se suma el dinero del giro de la ruleta
                 Console.showMessage("Good job! The letter " + guessedLetter + " is in the phrase.");
+                Console.showMessage(currentPlayer.getName() + " wins " + wheelValue + " money! Total: " + currentPlayer.getMoney());
             } else {
                 Console.showMessage("Sorry, the letter " + guessedLetter + " is not in the phrase.");
                 // Si falla, se pasa al siguiente turno
@@ -164,6 +168,14 @@ public class Game {
             return slices.get(random.nextInt(slices.size()));
         } else {
             throw new IllegalStateException("The slices list is not initialized.");
+        }
+    }
+
+    public int getSliceValue(String slice) {
+        try {
+            return Integer.parseInt(slice.replaceAll("[^0-9]", "")); // Extrae el valor numérico de la ruleta
+        } catch (NumberFormatException e) {
+            return 0; // En caso de que el slice no sea un número, devuelve 0
         }
     }
 
