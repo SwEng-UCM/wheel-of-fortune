@@ -202,5 +202,12 @@ public class Game {
     public void addPlayer(Player player) {
         players.add(player);
     }
+    public List<Player> getPlayers() {
+        return players;
+    }
+    public int getCurrentPlayerIndex() {
+        return currentPlayerIndex;
+    }
 
+    
 }

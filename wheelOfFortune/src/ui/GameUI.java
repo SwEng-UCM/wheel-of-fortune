@@ -9,10 +9,6 @@ import ui.panels.BottomPanel;
 import javax.swing.*;
 import java.awt.*;
 
-/**
- * Clase principal de la interfaz: extiende JFrame y
- * coordina los paneles y la lógica del juego.
- */
 public class GameUI extends JFrame {
     private Game game;
 
@@ -21,6 +17,7 @@ public class GameUI extends JFrame {
     private char[] revealed;        // Estado de la frase con '_'
     private boolean hasSpun;        // Indica si el jugador ya giró en este turno
     private boolean gameOver;       // Indica si la frase se completó
+    private int currentSpinValue;   // Almacena el valor del giro actual
 
     // Paneles
     private TopPanel topPanel;
@@ -33,10 +30,9 @@ public class GameUI extends JFrame {
         setLayout(new BorderLayout(10, 10));
         setSize(800, 500);
 
-        this.game = new Game();  // 🔹 Inicializar lógica del juego
-        registerPlayers();       // 🔹 Pedir los jugadores antes de iniciar
-
-        initGameState();         // 🔹 Inicializar el estado del juego
+        this.game = new Game();
+        registerPlayers();
+        initGameState();
 
         // Crear e incorporar los paneles
         topPanel = new TopPanel(this);
@@ -48,15 +44,14 @@ public class GameUI extends JFrame {
         bottomPanel = new BottomPanel(this);
         add(bottomPanel, BorderLayout.SOUTH);
 
-        updateUIState(); // 🔹 Mostrar el jugador actual correctamente
+        updateUIState(); // Actualiza la frase, el turno y las carteras
 
         setLocationRelativeTo(null);
         setVisible(true);
     }
 
-
     /**
-     * Selecciona la frase y prepara el array 'revealed' con '_'.
+     * Selecciona la frase y prepara el array 'revealed' con '_' para cada carácter (excepto espacios).
      */
     private void initGameState() {
         selectedPhrase = game.getRandomPhrase();
@@ -66,9 +61,10 @@ public class GameUI extends JFrame {
         }
         hasSpun = false;
         gameOver = false;
+        currentSpinValue = 0;
     }
 
-    // GETTERS para que los paneles accedan a la información si lo necesitan
+    // GETTERS para que los paneles accedan a la información
     public Game getGame() {
         return game;
     }
@@ -84,8 +80,6 @@ public class GameUI extends JFrame {
     public boolean isGameOver() {
         return gameOver;
     }
-
-    // SETTERS o métodos de actualización
     public void setHasSpun(boolean hasSpun) {
         this.hasSpun = hasSpun;
     }
@@ -94,45 +88,88 @@ public class GameUI extends JFrame {
     }
 
     /**
-     * Actualiza el estado visual de la interfaz (frase, jugador actual).
+     * Actualiza la interfaz: la frase, el jugador actual y las carteras.
      */
     public void updateUIState() {
         topPanel.updatePhraseLabel();
-        centerPanel.updateCurrentPlayer();  // 🔹 Asegurar que se actualiza el turno en la UI
+        centerPanel.updateCurrentPlayer();
+        centerPanel.updateWallets(); // Refresca la visualización de las carteras
     }
 
+    /**
+     * Gira la ruleta y almacena el valor obtenido. Se muestra únicamente el resultado textual.
+     */
+    public void spinWheel() {
+        if (!gameOver && !hasSpun) {
+            try {
+                String sliceResult = game.randomSlice();
+                currentSpinValue = game.getSliceValue(sliceResult);
+                bottomPanel.appendMessage("🎡 Spin result: " + sliceResult);
+                hasSpun = true;
+            } catch (Exception ex) {
+                bottomPanel.appendMessage("❌ Error spinning the wheel: " + ex.getMessage());
+            }
+        }
+    }
+
+    /**
+     * Procesa la adivinanza de una letra:
+     * - Recorre la frase y cuenta las ocurrencias de la letra adivinada.
+     * - Si hay aciertos, multiplica el valor del giro por las ocurrencias y se suma al dinero del jugador actual.
+     * - Se actualiza la UI, incluidas las carteras.
+     */
+    public boolean guessLetter(String guessText) {
+        if (gameOver || !hasSpun) return false;
+
+        char guessedLetter = guessText.charAt(0);
+        int occurrences = 0;
+        for (int i = 0; i < selectedPhrase.length(); i++) {
+            char originalChar = selectedPhrase.charAt(i);
+            if (Character.toUpperCase(originalChar) == guessedLetter && revealed[i] == '_') {
+                revealed[i] = originalChar;
+                occurrences++;
+            }
+        }
+
+        if (occurrences > 0) {
+            Player currentPlayer = game.getPlayers().get(game.getCurrentPlayerIndex());
+            int amountWon = currentSpinValue * occurrences;
+            currentPlayer.addMoney(amountWon);
+            bottomPanel.appendMessage("✔ Good! Letter '" + guessedLetter + "' is in the phrase (" 
+                + occurrences + " occurrence" + (occurrences > 1 ? "s" : "") + "). " 
+                + currentPlayer.getName() + " wins $" + amountWon 
+                + "! Total: $" + currentPlayer.getMoney());
+            updateUIState();
+            if (isPhraseComplete()) {
+                bottomPanel.appendMessage("🎉 Congratulations! The phrase is: " + selectedPhrase);
+                gameOver = true;
+            }
+        } else {
+            bottomPanel.appendMessage("✖ Letter '" + guessedLetter + "' is not in the phrase. Next player!");
+            game.nextTurn();
+            updateUIState();
+        }
+
+        hasSpun = false;
+        updateUIState();
+        return occurrences > 0;
+    }
 
     /**
      * Comprueba si la frase está completamente descubierta.
      */
     public boolean isPhraseComplete() {
         for (char c : revealed) {
-            if (c == '_') {
-                return false;
-            }
+            if (c == '_') return false;
         }
         return true;
     }
 
     /**
-     * Método para que un panel "gire la ruleta".
+     * Pide el número de jugadores (mínimo 2) y los registra.
      */
-    public void spinWheel() {
-        if (!gameOver && !hasSpun) {
-            try {
-                String sliceResult = game.randomSlice();
-                bottomPanel.appendMessage("🎡 Spin result: " + sliceResult);
-                hasSpun = true;  // El jugador ya giró
-            } catch (Exception ex) {
-                bottomPanel.appendMessage("❌ Error spinning the wheel: " + ex.getMessage());
-            }
-        }
-    }
-    
     private void registerPlayers() {
         int numPlayers = -1;
-        
-        // Pedir número de jugadores (mínimo 2)
         while (numPlayers < 2) {
             String input = JOptionPane.showInputDialog(this, "Enter the number of players (minimum 2):");
             try {
@@ -144,56 +181,17 @@ public class GameUI extends JFrame {
                 JOptionPane.showMessageDialog(this, "Invalid number. Try again.", "Error", JOptionPane.ERROR_MESSAGE);
             }
         }
-
-        // Registrar los jugadores
         for (int i = 0; i < numPlayers; i++) {
             String playerName;
             do {
                 playerName = JOptionPane.showInputDialog(this, "Enter name for Player " + (i + 1) + ":");
             } while (playerName == null || playerName.trim().isEmpty());
-
-            game.addPlayer(new Player(playerName)); // 🔹 Agregar jugadores al juego
+            game.addPlayer(new Player(playerName));
         }
     }
 
-
-    /**
-     * Método para adivinar una letra. Devuelve true si fue correcta.
-     */
-    public boolean guessLetter(String guessText) {
-        if (gameOver || !hasSpun) return false;
-
-        char guessedLetter = guessText.charAt(0);
-        boolean correctGuess = false;
-
-        for (int i = 0; i < selectedPhrase.length(); i++) {
-            char originalChar = selectedPhrase.charAt(i);
-            if (Character.toUpperCase(originalChar) == guessedLetter && revealed[i] == '_') {
-                revealed[i] = originalChar;
-                correctGuess = true;
-            }
-        }
-
-        if (correctGuess) {
-            bottomPanel.appendMessage("✔ Good! Letter '" + guessedLetter + "' is in the phrase.");
-            updateUIState();  // 🔹 Asegurar que la interfaz se actualiza
-            if (isPhraseComplete()) {
-                bottomPanel.appendMessage("🎉 Congratulations! The phrase is: " + selectedPhrase);
-                gameOver = true;
-            }
-        } else {
-            bottomPanel.appendMessage("✖ Letter '" + guessedLetter + "' is not in the phrase. Next player!");
-            game.nextTurn();
-            updateUIState();  // 🔹 🔥 Aquí agregamos la actualización del turno
-        }
-
-        hasSpun = false;
-        updateUIState(); // 🔹 Asegurar que se refleja correctamente el nuevo turno
-        return correctGuess;
-    }
-
-    // Método main para probar directamente
     public static void main(String[] args) {
         SwingUtilities.invokeLater(GameUI::new);
     }
 }
+

@@ -30,4 +30,9 @@ public class Player {
     public void addMoney(int amount) {
         this.money += amount;
     }
+    
+    public int getBudget() {
+        return money;
+    }
+
 }
