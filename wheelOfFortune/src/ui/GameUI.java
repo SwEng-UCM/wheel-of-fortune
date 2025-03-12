@@ -121,6 +121,15 @@ public class GameUI extends JFrame {
                     return;
                 }
 
+                if (sliceResult.equalsIgnoreCase("Lose Turn")) {
+                    bottomPanel.appendMessage("⛔ " + game.getCurrentPlayerName() + " has lost their turn! Next player.");
+                    
+                    game.nextTurn(); // Pasar al siguiente jugador
+                    updateUIState();
+                    hasSpun = false;
+                    return;
+                }
+
                 hasSpun = true;
             } catch (Exception ex) {
                 bottomPanel.appendMessage("❌ Error spinning the wheel: " + ex.getMessage());
@@ -134,51 +143,51 @@ public class GameUI extends JFrame {
      * - Si hay aciertos, multiplica el valor del giro por las ocurrencias y se suma al dinero del jugador actual.
      * - Se actualiza la UI, incluidas las carteras.
      */
-    public boolean guessLetter(String guessText) {
-        if (gameOver || !hasSpun) return false;
+public boolean guessLetter(String guessText) {
+    if (gameOver || !hasSpun) return false;
 
-        // Si el último giro fue "Bankrupt", el jugador ya perdió el turno
-        if (currentSpinValue == 0) {
-            bottomPanel.appendMessage("🚫 You cannot guess a letter after going bankrupt!");
-            return false;
-        }
-
-        char guessedLetter = guessText.charAt(0);
-        int occurrences = 0;
-        for (int i = 0; i < selectedPhrase.length(); i++) {
-            char originalChar = selectedPhrase.charAt(i);
-            if (Character.toUpperCase(originalChar) == guessedLetter && revealed[i] == '_') {
-                revealed[i] = originalChar;
-                occurrences++;
-            }
-        }
-
-        if (occurrences > 0) {
-            Player currentPlayer = game.getPlayers().get(game.getCurrentPlayerIndex());
-            int amountWon = currentSpinValue * occurrences;
-            currentPlayer.addMoney(amountWon);
-            bottomPanel.appendMessage("✔ Good! Letter '" + guessedLetter + "' is in the phrase (" 
-                + occurrences + " occurrence" + (occurrences > 1 ? "s" : "") + "). " 
-                + currentPlayer.getName() + " wins $" + amountWon 
-                + "! Total: $" + currentPlayer.getMoney());
-
-            updateUIState();
-            if (isPhraseComplete()) {
-                bottomPanel.appendMessage("🎉 Congratulations! The phrase is: " + selectedPhrase);
-                gameOver = true;
-                game.setRevealed(revealed);
-                game.checkGameOver();
-            }
-        } else {
-            bottomPanel.appendMessage("✖ Letter '" + guessedLetter + "' is not in the phrase. Next player!");
-            game.nextTurn();
-            updateUIState();
-        }
-
-        hasSpun = false;
-        updateUIState();
-        return occurrences > 0;
+    // Si el último giro fue "Lose Turn", el jugador ya perdió el turno
+    if (currentSpinValue == 0) {
+        bottomPanel.appendMessage("🚫 You cannot guess a letter after losing your turn!");
+        return false;
     }
+
+    char guessedLetter = guessText.charAt(0);
+    int occurrences = 0;
+    for (int i = 0; i < selectedPhrase.length(); i++) {
+        char originalChar = selectedPhrase.charAt(i);
+        if (Character.toUpperCase(originalChar) == guessedLetter && revealed[i] == '_') {
+            revealed[i] = originalChar;
+            occurrences++;
+        }
+    }
+
+    if (occurrences > 0) {
+        Player currentPlayer = game.getPlayers().get(game.getCurrentPlayerIndex());
+        int amountWon = currentSpinValue * occurrences;
+        currentPlayer.addMoney(amountWon);
+        bottomPanel.appendMessage("✔ Good! Letter '" + guessedLetter + "' is in the phrase (" 
+            + occurrences + " occurrence" + (occurrences > 1 ? "s" : "") + "). " 
+            + currentPlayer.getName() + " wins $" + amountWon 
+            + "! Total: $" + currentPlayer.getMoney());
+
+        updateUIState();
+        if (isPhraseComplete()) {
+            bottomPanel.appendMessage("🎉 Congratulations! The phrase is: " + selectedPhrase);
+            gameOver = true;
+            game.setRevealed(revealed);
+            game.checkGameOver();
+        }
+    } else {
+        bottomPanel.appendMessage("✖ Letter '" + guessedLetter + "' is not in the phrase. Next player!");
+        game.nextTurn();
+        updateUIState();
+    }
+
+    hasSpun = false;
+    updateUIState();
+    return occurrences > 0;
+}
 
     /**
      * Comprueba si la frase está completamente descubierta.
