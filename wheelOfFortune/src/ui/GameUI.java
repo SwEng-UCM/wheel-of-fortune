@@ -192,14 +192,75 @@ public class GameUI extends JFrame {
                 JOptionPane.showMessageDialog(this, "Invalid number. Try again.", "Error", JOptionPane.ERROR_MESSAGE);
             }
         }
+        
         for (int i = 0; i < numPlayers; i++) {
-            String playerName;
-            do {
-                playerName = JOptionPane.showInputDialog(this, "Enter name for Player " + (i + 1) + ":");
-            } while (playerName == null || playerName.trim().isEmpty());
-            game.addPlayer(new Player(playerName));
+            // Creamos un panel custom para que el usuario introduzca su nombre y seleccione un avatar
+            JPanel panel = new JPanel();
+            panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+            
+            // Panel para el nombre
+            JPanel namePanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+            namePanel.add(new JLabel("Enter name for Player " + (i + 1) + ":"));
+            JTextField nameField = new JTextField(20);
+            namePanel.add(nameField);
+            panel.add(namePanel);
+            
+            panel.add(Box.createVerticalStrut(10));
+            panel.add(new JLabel("Select your avatar:"));
+            
+            // Panel para la selección de avatares
+            JPanel avatarPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+            // Cargamos y escalamos los 5 avatares (ajusta el tamaño deseado, aquí 50x50 píxeles)
+            ImageIcon[] avatars = new ImageIcon[] {
+                new ImageIcon(new ImageIcon(getClass().getResource("/avatar1.jpg")).getImage().getScaledInstance(50, 50, Image.SCALE_SMOOTH)),
+                new ImageIcon(new ImageIcon(getClass().getResource("/avatar2.jpg")).getImage().getScaledInstance(50, 50, Image.SCALE_SMOOTH)),
+                new ImageIcon(new ImageIcon(getClass().getResource("/avatar3.jpg")).getImage().getScaledInstance(50, 50, Image.SCALE_SMOOTH)),
+                new ImageIcon(new ImageIcon(getClass().getResource("/avatar4.jpg")).getImage().getScaledInstance(50, 50, Image.SCALE_SMOOTH)),
+                new ImageIcon(new ImageIcon(getClass().getResource("/avatar5.jpg")).getImage().getScaledInstance(50, 50, Image.SCALE_SMOOTH))
+            };
+            
+            // Usamos botones de alternancia para la selección
+            JToggleButton[] avatarButtons = new JToggleButton[avatars.length];
+            ButtonGroup avatarGroup = new ButtonGroup();
+            for (int j = 0; j < avatars.length; j++) {
+                avatarButtons[j] = new JToggleButton(avatars[j]);
+                avatarButtons[j].setPreferredSize(new Dimension(60, 60));
+                avatarGroup.add(avatarButtons[j]);
+                avatarPanel.add(avatarButtons[j]);
+            }
+            // Selecciona por defecto el primer avatar
+            avatarButtons[0].setSelected(true);
+            
+            panel.add(avatarPanel);
+            
+            int result = JOptionPane.showConfirmDialog(this, panel, "Player Registration", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+            if (result != JOptionPane.OK_OPTION) {
+                i--; // Si se cancela, volvemos a intentar para este jugador
+                continue;
+            }
+            
+            String playerName = nameField.getText().trim();
+            if (playerName.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Name cannot be empty.", "Error", JOptionPane.ERROR_MESSAGE);
+                i--;
+                continue;
+            }
+            
+            int avatarChoice = 0;
+            for (int j = 0; j < avatarButtons.length; j++) {
+                if (avatarButtons[j].isSelected()) {
+                    avatarChoice = j;
+                    break;
+                }
+            }
+            
+            // Creamos el jugador y le asignamos el avatar seleccionado
+            Player player = new Player(playerName);
+            player.setAvatar(avatars[avatarChoice]);
+            game.addPlayer(player);
         }
     }
+
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(GameUI::new);
