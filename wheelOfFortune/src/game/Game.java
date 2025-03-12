@@ -2,10 +2,15 @@ package game;
 
 import players.Player;
 import ui.Console;
+import ui.EndScreen;
 import utils.InputHelper;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+
+import javax.swing.JFrame;
+import javax.swing.SwingUtilities;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -16,8 +21,14 @@ public class Game {
     private int currentPlayerIndex;
     private List<String> phrases;
     private List<String> slices;
+    private Player currentPlayer;
+    private String phrase;
+    private char[] revealed;
+    private boolean isGameOver;
+    private JFrame gameWindow;
 
-    public Game() {
+    public Game(JFrame gameWindow) {
+    	this.gameWindow = gameWindow;
         players = new ArrayList<>();
         currentPlayerIndex = 0;
         phrases = new ArrayList<>();
@@ -84,7 +95,7 @@ public class Game {
         String selectedPhrase = getRandomPhrase();
 
         // Inicializa el panel con '_' para letras y espacios en blanco donde corresponda
-        char[] revealed = new char[selectedPhrase.length()];
+        revealed = new char[selectedPhrase.length()];
         for (int i = 0; i < selectedPhrase.length(); i++) {
             if (selectedPhrase.charAt(i) == ' ') {
                 revealed[i] = ' ';
@@ -137,6 +148,7 @@ public class Game {
         // Se muestra el panel final y se felicita al ganador
         displayPanel(revealed);
         Console.showMessage("\n🎉 Congratulations! The phrase is complete: " + selectedPhrase);
+        checkGameOver();
     }
 
     private boolean isPhraseComplete(char[] revealed) {
@@ -147,6 +159,31 @@ public class Game {
         }
         return true;
     }
+    
+    private boolean phraseIsComplete() {
+    	
+        return isPhraseComplete(revealed); // Pasa la variable correcta
+    }
+    
+    
+    public void checkGameOver() {
+        if (revealed == null) {
+            System.out.println("⚠️ ERROR: revealed es null en checkGameOver()");
+            return;
+        }
+        boolean phraseCompleted = phraseIsComplete();
+        if (phraseCompleted) {
+            isGameOver = true;
+         
+            showEndScreen();
+        }
+    }
+    
+    public void setRevealed(char[] updatedRevealed) {
+        this.revealed = updatedRevealed;
+        
+    }
+
 
     private void displayPanel(char[] revealed) {
         Console.showMessage("\n🎭 THE SECRET PHRASE 🎭");
@@ -208,6 +245,25 @@ public class Game {
     public int getCurrentPlayerIndex() {
         return currentPlayerIndex;
     }
+    
+    private void showEndScreen() {
+        Player winner = players.get(currentPlayerIndex);
+
+        SwingUtilities.invokeLater(() -> {
+            
+            if (gameWindow != null) {
+                gameWindow.dispose(); // 🔹 Cierra la ventana de GameUI de manera segura
+            }
+
+            // Crear y mostrar la pantalla final
+            EndScreen endScreen = new EndScreen(winner.getName(), winner.getMoney());
+            endScreen.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+            endScreen.setVisible(true);
+        });
+    }
+
+
+
 
     
 }

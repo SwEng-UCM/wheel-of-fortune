@@ -23,6 +23,9 @@ public class GameUI extends JFrame {
     private TopPanel topPanel;
     private CenterPanel centerPanel;
     private BottomPanel bottomPanel;
+    
+ 
+
 
     public GameUI() {
         super("Wheel of Fortune Game");
@@ -30,7 +33,8 @@ public class GameUI extends JFrame {
         setLayout(new BorderLayout(10, 10));
         setSize(800, 500);
 
-        this.game = new Game();
+        this.game = new Game(this); // 🔹 Pasar referencia de la ventana actual
+
         registerPlayers();
         initGameState();
 
@@ -130,6 +134,7 @@ public class GameUI extends JFrame {
                 occurrences++;
             }
         }
+        
 
         if (occurrences > 0) {
             Player currentPlayer = game.getPlayers().get(game.getCurrentPlayerIndex());
@@ -143,7 +148,13 @@ public class GameUI extends JFrame {
             if (isPhraseComplete()) {
                 bottomPanel.appendMessage("🎉 Congratulations! The phrase is: " + selectedPhrase);
                 gameOver = true;
+                
+                game.setRevealed(revealed);
+
+                game.checkGameOver(); // Ahora sí se llama a checkGameOver()
             }
+
+
         } else {
             bottomPanel.appendMessage("✖ Letter '" + guessedLetter + "' is not in the phrase. Next player!");
             game.nextTurn();

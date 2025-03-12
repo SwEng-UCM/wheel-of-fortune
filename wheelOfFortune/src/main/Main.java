@@ -1,10 +1,13 @@
 package main;
 
-import game.Game;
+import ui.GameUI;
+
+import javax.swing.SwingUtilities;
 
 public class Main {
     public static void main(String[] args) {
-        Game game = new Game();
-        game.start();
+        SwingUtilities.invokeLater(() -> {
+            new GameUI(); // 🔹 Iniciar el juego desde GameUI
+        });
     }
 }
