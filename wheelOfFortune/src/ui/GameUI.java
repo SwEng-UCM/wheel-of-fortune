@@ -109,6 +109,18 @@ public class GameUI extends JFrame {
                 String sliceResult = game.randomSlice();
                 currentSpinValue = game.getSliceValue(sliceResult);
                 bottomPanel.appendMessage("🎡 Spin result: " + sliceResult);
+
+                if (sliceResult.equalsIgnoreCase("Bankrupt")) {
+                    Player currentPlayer = game.getPlayers().get(game.getCurrentPlayerIndex());
+                    currentPlayer.addMoney(-currentPlayer.getMoney()); // Pierde todo su dinero
+                    bottomPanel.appendMessage("💸 " + currentPlayer.getName() + " has gone BANKRUPT! All money lost.");
+                    
+                    game.nextTurn(); // Pasar al siguiente jugador
+                    updateUIState();
+                    hasSpun = false;
+                    return;
+                }
+
                 hasSpun = true;
             } catch (Exception ex) {
                 bottomPanel.appendMessage("❌ Error spinning the wheel: " + ex.getMessage());
@@ -125,6 +137,12 @@ public class GameUI extends JFrame {
     public boolean guessLetter(String guessText) {
         if (gameOver || !hasSpun) return false;
 
+        // Si el último giro fue "Bankrupt", el jugador ya perdió el turno
+        if (currentSpinValue == 0) {
+            bottomPanel.appendMessage("🚫 You cannot guess a letter after going bankrupt!");
+            return false;
+        }
+
         char guessedLetter = guessText.charAt(0);
         int occurrences = 0;
         for (int i = 0; i < selectedPhrase.length(); i++) {
@@ -134,7 +152,6 @@ public class GameUI extends JFrame {
                 occurrences++;
             }
         }
-        
 
         if (occurrences > 0) {
             Player currentPlayer = game.getPlayers().get(game.getCurrentPlayerIndex());
@@ -144,17 +161,14 @@ public class GameUI extends JFrame {
                 + occurrences + " occurrence" + (occurrences > 1 ? "s" : "") + "). " 
                 + currentPlayer.getName() + " wins $" + amountWon 
                 + "! Total: $" + currentPlayer.getMoney());
+
             updateUIState();
             if (isPhraseComplete()) {
                 bottomPanel.appendMessage("🎉 Congratulations! The phrase is: " + selectedPhrase);
                 gameOver = true;
-                
                 game.setRevealed(revealed);
-
-                game.checkGameOver(); // Ahora sí se llama a checkGameOver()
+                game.checkGameOver();
             }
-
-
         } else {
             bottomPanel.appendMessage("✖ Letter '" + guessedLetter + "' is not in the phrase. Next player!");
             game.nextTurn();
