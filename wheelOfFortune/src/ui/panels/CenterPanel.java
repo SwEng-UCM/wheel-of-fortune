@@ -90,7 +90,7 @@ public class CenterPanel extends JPanel {
         walletPanel.setBackground(Color.WHITE);
         walletPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
-        // Paleta de colores personalizada
+        // Paleta de colores personalizada para el fondo del presupuesto
         Color[] walletColors = {
             new Color(52, 152, 219),  // Azul
             new Color(231, 76, 60),   // Rojo
@@ -106,17 +106,40 @@ public class CenterPanel extends JPanel {
             Player player = players.get(i);
             JPanel playerPanel = new JPanel();
             playerPanel.setLayout(new BoxLayout(playerPanel, BoxLayout.Y_AXIS));
-            // Borde redondeado con padding interno
             playerPanel.setBorder(BorderFactory.createCompoundBorder(
                     BorderFactory.createLineBorder(Color.DARK_GRAY, 2, true),
                     BorderFactory.createEmptyBorder(10, 15, 10, 15)
             ));
             playerPanel.setBackground(Color.WHITE);
 
+            // Panel para dividir en dos mitades (avatar / info)
+            JPanel splitPanel = new JPanel();
+            splitPanel.setLayout(new BoxLayout(splitPanel, BoxLayout.X_AXIS));
+            splitPanel.setBackground(Color.WHITE);
+
+            // --- Lado izquierdo: Avatar ---
+            JPanel avatarPanel = new JPanel(new BorderLayout());
+            avatarPanel.setBackground(Color.WHITE);
+            JLabel avatarLabel = new JLabel();
+            avatarLabel.setHorizontalAlignment(SwingConstants.CENTER);
+            if (player.getAvatar() != null) {
+                // Redimensionar el avatar a un tamaño adecuado, por ejemplo 60x60 píxeles
+                Image image = player.getAvatar().getImage().getScaledInstance(60, 60, Image.SCALE_SMOOTH);
+                avatarLabel.setIcon(new ImageIcon(image));
+            } else {
+                avatarLabel.setText("No Avatar");
+            }
+            avatarPanel.add(avatarLabel, BorderLayout.CENTER);
+            // Establece un tamaño preferido para esta mitad (puedes ajustar)
+            avatarPanel.setPreferredSize(new Dimension(80, 60));
+
+            // --- Lado derecho: Nombre y dinero ---
+            JPanel infoPanel = new JPanel();
+            infoPanel.setLayout(new BoxLayout(infoPanel, BoxLayout.Y_AXIS));
+            infoPanel.setBackground(Color.WHITE);
             JLabel nameLabel = new JLabel(player.getName(), SwingConstants.CENTER);
             nameLabel.setFont(new Font("Arial", Font.BOLD, 16));
             nameLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-
             JLabel budgetLabel = new JLabel("$" + player.getBudget(), SwingConstants.CENTER);
             budgetLabel.setFont(new Font("Arial", Font.BOLD, 16));
             budgetLabel.setOpaque(true);
@@ -125,14 +148,24 @@ public class CenterPanel extends JPanel {
             budgetLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
             budgetLabel.setPreferredSize(new Dimension(120, 40));
             budgetLabel.setMaximumSize(new Dimension(120, 40));
+            // Agregar espacios entre el nombre y el presupuesto
+            infoPanel.add(nameLabel);
+            infoPanel.add(Box.createVerticalStrut(8));
+            infoPanel.add(budgetLabel);
 
-            budgetLabels.add(budgetLabel);
+            // Agregar ambos paneles al splitPanel con un pequeño espacio horizontal entre ellos
+            splitPanel.add(avatarPanel);
+            splitPanel.add(Box.createHorizontalStrut(10));
+            splitPanel.add(infoPanel);
 
-            playerPanel.add(nameLabel);
-            playerPanel.add(Box.createVerticalStrut(8));
-            playerPanel.add(budgetLabel);
+            // Agregar el splitPanel al panel del jugador
+            playerPanel.add(splitPanel);
 
+            // Agregar el panel del jugador al walletPanel general
             walletPanel.add(playerPanel);
+
+            // Guardar la etiqueta para actualizar el dinero posteriormente
+            budgetLabels.add(budgetLabel);
         }
 
         add(walletPanel);
