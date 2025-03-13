@@ -1,4 +1,5 @@
 Bankrupt
 Lose turn
+x2
 1000€
 1000€

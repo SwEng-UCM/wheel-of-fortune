@@ -18,6 +18,7 @@ public class GameUI extends JFrame {
     private boolean hasSpun;        // Indica si el jugador ya giró en este turno
     private boolean gameOver;       // Indica si la frase se completó
     private int currentSpinValue;   // Almacena el valor del giro actual
+    private boolean isX2Active = false; // 🔹 Indica si el próximo acierto se duplicará
 
     // Paneles
     private TopPanel topPanel;
@@ -103,39 +104,46 @@ public class GameUI extends JFrame {
     /**
      * Gira la ruleta y almacena el valor obtenido. Se muestra únicamente el resultado textual.
      */
-    public void spinWheel() {
-        if (!gameOver && !hasSpun) {
-            try {
-                String sliceResult = game.randomSlice();
-                currentSpinValue = game.getSliceValue(sliceResult);
-                bottomPanel.appendMessage("🎡 Spin result: " + sliceResult);
+public void spinWheel() {
+    if (!gameOver && !hasSpun) {
+        try {
+            String sliceResult = game.randomSlice();
+            currentSpinValue = game.getSliceValue(sliceResult);
+            bottomPanel.appendMessage("🎡 Spin result: " + sliceResult);
 
-                if (sliceResult.equalsIgnoreCase("Bankrupt")) {
-                    Player currentPlayer = game.getPlayers().get(game.getCurrentPlayerIndex());
-                    currentPlayer.addMoney(-currentPlayer.getMoney()); // Pierde todo su dinero
-                    bottomPanel.appendMessage("💸 " + currentPlayer.getName() + " has gone BANKRUPT! All money lost.");
-                    
-                    game.nextTurn(); // Pasar al siguiente jugador
-                    updateUIState();
-                    hasSpun = false;
-                    return;
-                }
-
-                if (sliceResult.equalsIgnoreCase("Lose Turn")) {
-                    bottomPanel.appendMessage("⛔ " + game.getCurrentPlayerName() + " has lost their turn! Next player.");
-                    
-                    game.nextTurn(); // Pasar al siguiente jugador
-                    updateUIState();
-                    hasSpun = false;
-                    return;
-                }
-
-                hasSpun = true;
-            } catch (Exception ex) {
-                bottomPanel.appendMessage("❌ Error spinning the wheel: " + ex.getMessage());
+            if (sliceResult.equalsIgnoreCase("Bankrupt")) {
+                Player currentPlayer = game.getPlayers().get(game.getCurrentPlayerIndex());
+                currentPlayer.addMoney(-currentPlayer.getMoney()); // Pierde todo su dinero
+                bottomPanel.appendMessage("💸 " + currentPlayer.getName() + " has gone BANKRUPT! All money lost.");
+                
+                game.nextTurn();
+                updateUIState();
+                hasSpun = false;
+                return;
             }
+
+            if (sliceResult.equalsIgnoreCase("Lose Turn")) {
+                bottomPanel.appendMessage("⛔ " + game.getCurrentPlayerName() + " has lost their turn! Next player.");
+                
+                game.nextTurn();
+                updateUIState();
+                hasSpun = false;
+                return;
+            }
+
+            if (sliceResult.equalsIgnoreCase("x2")) {
+                bottomPanel.appendMessage("✨ " + game.getCurrentPlayerName() + " landed on X2! Spin again...");
+                isX2Active = true; // 🔹 Activamos el X2 para la primera consonante
+                spinWheel(); // 🔹 Hace otro giro automático
+                return;
+            }
+
+            hasSpun = true;
+        } catch (Exception ex) {
+            bottomPanel.appendMessage("❌ Error spinning the wheel: " + ex.getMessage());
         }
     }
+}
 
     /**
      * Procesa la adivinanza de una letra:
@@ -148,9 +156,8 @@ public boolean guessLetter(String guessText) {
 
     char guessedLetter = guessText.charAt(0);
 
-    // Lista de vocales
-    String vowels = "AEIOU";
-    if (vowels.indexOf(guessedLetter) != -1) {
+    // Evitar que intenten adivinar vocales en un turno normal
+    if ("AEIOU".indexOf(guessedLetter) != -1) {
         bottomPanel.appendMessage("❌ You can only guess consonants in your turn! Try again.");
         return false;
     }
@@ -167,6 +174,13 @@ public boolean guessLetter(String guessText) {
     if (occurrences > 0) {
         Player currentPlayer = game.getPlayers().get(game.getCurrentPlayerIndex());
         int amountWon = currentSpinValue * occurrences;
+
+        if (isX2Active) {
+            amountWon *= 2; // 🔹 Duplica solo la primera consonante acertada
+            isX2Active = false; // 🔹 El X2 deja de estar activo después del primer acierto
+            bottomPanel.appendMessage("💥 X2 ACTIVE! " + currentPlayer.getName() + " wins DOUBLE money: $" + amountWon);
+        }
+
         currentPlayer.addMoney(amountWon);
         bottomPanel.appendMessage("✔ Good! Letter '" + guessedLetter + "' is in the phrase (" 
             + occurrences + " occurrence" + (occurrences > 1 ? "s" : "") + "). " 
