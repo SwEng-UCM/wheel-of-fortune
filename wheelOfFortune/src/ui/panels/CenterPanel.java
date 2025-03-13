@@ -16,68 +16,72 @@ public class CenterPanel extends JPanel {
     private JButton guessButton;
     private JTextField letterInput;
     private JLabel currentPlayerLabel;
+    private JButton buyVowelButton;
 
     // Panel para mostrar las carteras (wallets) de los jugadores
     private JPanel walletPanel;
     // Lista de etiquetas para actualizar el dinero de cada jugador
     private List<JLabel> budgetLabels;
 
-    public CenterPanel(GameUI gameUI) {
-        this.gameUI = gameUI;
-        this.budgetLabels = new ArrayList<>();
+public CenterPanel(GameUI gameUI) {
+    this.gameUI = gameUI;
+    this.budgetLabels = new ArrayList<>();
 
-        // Usamos un BoxLayout vertical para apilar el panel de acciones y el de carteras
-        setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+    setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 
-        // ----- PANEL DE ACCIONES -----
-        JPanel actionPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 10));
+    JPanel actionPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 10));
 
-        spinButton = new JButton("Spin");
-        spinButton.setFont(new Font("Arial", Font.BOLD, 16));
-        spinButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                gameUI.spinWheel();
-                refreshButtons();
-            }
-        });
-
-        guessButton = new JButton("Guess Letter");
-        guessButton.setFont(new Font("Arial", Font.BOLD, 16));
-        guessButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                String guessText = letterInput.getText().trim().toUpperCase();
-                if (guessText.length() != 1) {
-                    JOptionPane.showMessageDialog(CenterPanel.this, "Enter a single letter.");
-                    return;
-                }
-                gameUI.guessLetter(guessText);
-                letterInput.setText("");
-                refreshButtons();
-            }
-        });
-
-        letterInput = new JTextField(3);
-        letterInput.setFont(new Font("Arial", Font.PLAIN, 16));
-
-        currentPlayerLabel = new JLabel("Turn: Unknown");
-        currentPlayerLabel.setFont(new Font("Arial", Font.BOLD, 16));
-
-        actionPanel.add(spinButton);
-        actionPanel.add(new JLabel("Letter:"));
-        actionPanel.add(letterInput);
-        actionPanel.add(guessButton);
-        actionPanel.add(currentPlayerLabel);
-
-        add(actionPanel);
-
-        // ----- PANEL DE CARTERAS (WALLETS) -----
-        initWalletPanel();
-
+    spinButton = new JButton("Spin");
+    spinButton.setFont(new Font("Arial", Font.BOLD, 16));
+    spinButton.addActionListener(e -> {
+        gameUI.spinWheel();
         refreshButtons();
-    }
+    });
 
+    guessButton = new JButton("Guess Letter");
+    guessButton.setFont(new Font("Arial", Font.BOLD, 16));
+    guessButton.addActionListener(e -> {
+        String guessText = letterInput.getText().trim().toUpperCase();
+        if (guessText.length() != 1) {
+            JOptionPane.showMessageDialog(CenterPanel.this, "Enter a single letter.");
+            return;
+        }
+        gameUI.guessLetter(guessText);
+        letterInput.setText("");
+        refreshButtons();
+    });
+
+    buyVowelButton = new JButton("Buy Vowel ($75)"); //CAMBIAR AQUÍ TAMBIÉN EL PRECIO DE COMPRA DE VOCAL PARA QUE VISUALMENTE SE VEA BIEN
+    buyVowelButton.setFont(new Font("Arial", Font.BOLD, 16));
+    buyVowelButton.addActionListener(e -> {
+        String vowelText = letterInput.getText().trim().toUpperCase();
+        if (vowelText.length() != 1 || !"AEIOU".contains(vowelText)) {
+            JOptionPane.showMessageDialog(CenterPanel.this, "You can only buy vowels (A, E, I, O, U).");
+            return;
+        }
+        gameUI.buyVowel(vowelText);
+        letterInput.setText("");
+        refreshButtons();
+    });
+
+    letterInput = new JTextField(3);
+    letterInput.setFont(new Font("Arial", Font.PLAIN, 16));
+
+    currentPlayerLabel = new JLabel("Turn: Unknown");
+    currentPlayerLabel.setFont(new Font("Arial", Font.BOLD, 16));
+
+    actionPanel.add(spinButton);
+    actionPanel.add(new JLabel("Letter:"));
+    actionPanel.add(letterInput);
+    actionPanel.add(guessButton);
+    actionPanel.add(buyVowelButton);
+    actionPanel.add(currentPlayerLabel);
+
+    add(actionPanel);
+
+    initWalletPanel();
+    refreshButtons();
+}
     /**
      * Inicializa el panel de carteras. Se crea un sub-panel para cada jugador con estilo moderno:
      * - Bordes redondeados y padding interno.

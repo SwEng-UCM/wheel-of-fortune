@@ -290,5 +290,46 @@ public boolean guessLetter(String guessText) {
     public static void main(String[] args) {
         SwingUtilities.invokeLater(GameUI::new);
     }
+    
+    public void buyVowel(String vowel) {
+        Player currentPlayer = game.getPlayers().get(game.getCurrentPlayerIndex());
+        
+        int vowelPrice = 75; //CAMBIAR AQUÍ EL PRECIO QUE QUERAMOS QUE CUESTE COMPRAR LA VOCAL
+        if (currentPlayer.getMoney() < vowelPrice) {
+            bottomPanel.appendMessage("❌ Not enough money to buy a vowel!");
+            return;
+        }
+
+        // Restar el costo de la vocal
+        currentPlayer.addMoney(-vowelPrice);
+        bottomPanel.appendMessage("🛒 " + currentPlayer.getName() + " bought the vowel '" + vowel + "' for $" + vowelPrice);
+
+        // Revelar la vocal en la frase
+        char guessedVowel = vowel.charAt(0);
+        int occurrences = 0;
+        for (int i = 0; i < selectedPhrase.length(); i++) {
+            char originalChar = selectedPhrase.charAt(i);
+            if (Character.toUpperCase(originalChar) == guessedVowel && revealed[i] == '_') {
+                revealed[i] = originalChar;
+                occurrences++;
+            }
+        }
+
+        if (occurrences > 0) {
+            bottomPanel.appendMessage("✔ The vowel '" + guessedVowel + "' appears " + occurrences + " time(s).");
+            updateUIState();
+            if (isPhraseComplete()) {
+                bottomPanel.appendMessage("🎉 Congratulations! The phrase is: " + selectedPhrase);
+                gameOver = true;
+                game.setRevealed(revealed);
+                game.checkGameOver();
+            }
+        } else {
+            bottomPanel.appendMessage("❌ The vowel '" + guessedVowel + "' is NOT in the phrase.");
+        }
+
+        updateUIState();
+    }
+
 }
 
