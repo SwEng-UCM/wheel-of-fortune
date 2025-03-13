@@ -146,13 +146,15 @@ public class GameUI extends JFrame {
 public boolean guessLetter(String guessText) {
     if (gameOver || !hasSpun) return false;
 
-    // Si el último giro fue "Lose Turn", el jugador ya perdió el turno
-    if (currentSpinValue == 0) {
-        bottomPanel.appendMessage("🚫 You cannot guess a letter after losing your turn!");
+    char guessedLetter = guessText.charAt(0);
+
+    // Lista de vocales
+    String vowels = "AEIOU";
+    if (vowels.indexOf(guessedLetter) != -1) {
+        bottomPanel.appendMessage("❌ You can only guess consonants in your turn! Try again.");
         return false;
     }
 
-    char guessedLetter = guessText.charAt(0);
     int occurrences = 0;
     for (int i = 0; i < selectedPhrase.length(); i++) {
         char originalChar = selectedPhrase.charAt(i);
