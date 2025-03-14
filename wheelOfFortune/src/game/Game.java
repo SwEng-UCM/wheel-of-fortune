@@ -26,6 +26,7 @@ public class Game {
     private char[] revealed;
     private boolean isGameOver;
     private JFrame gameWindow;
+    private boolean hasSpun; 
 
     public Game(JFrame gameWindow) {
     	this.gameWindow = gameWindow;
@@ -116,7 +117,9 @@ public class Game {
             String sliceResult = randomSlice();
             int wheelValue = getSliceValue(sliceResult);
             Console.showMessage("\n🎡 SPIN THE WHEEL!!! 🎡\n" + sliceResult);
-
+            
+            hasSpun = true;
+            
             // Solicita la letra al jugador actual
             String guess = InputHelper.getText("\n🔠 " + getCurrentPlayerName() + ", enter a letter: ");
             if (guess.length() != 1) {
@@ -175,7 +178,12 @@ public class Game {
         if (phraseCompleted) {
             isGameOver = true;
          
-            showEndScreen();
+         // Assuming 'winner' is the current winner player in the game
+            Player winner = players.get(currentPlayerIndex);
+
+            // Pass 'this' to the EndScreen constructor to send the Game object
+            SwingUtilities.invokeLater(() -> new EndScreen(winner.getName(), winner.getMoney(), this).setVisible(true));
+
         }
     }
     
@@ -226,6 +234,7 @@ public class Game {
     public void nextTurn() {
         if (!players.isEmpty()) {
             currentPlayerIndex = (currentPlayerIndex + 1) % players.size();
+            hasSpun = false;
         }
     }
 
@@ -256,12 +265,22 @@ public class Game {
             }
 
             // Crear y mostrar la pantalla final
-            EndScreen endScreen = new EndScreen(winner.getName(), winner.getMoney());
+            EndScreen endScreen = new EndScreen(winner.getName(), winner.getMoney(), this);
             endScreen.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
             endScreen.setVisible(true);
         });
     }
 
+    public void restartGame() {
+        // Reset game state to start over
+        players.clear(); // Clear the players list
+        currentPlayerIndex = 0; // Reset the current player index
+        isGameOver = false; // Reset game over state
+        hasSpun = false; // Reset the spin state
+
+        // Call start() to reinitialize the game
+        start(); // Restart the game
+    }
 
 
 

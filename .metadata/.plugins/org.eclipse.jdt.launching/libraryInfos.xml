@@ -1,6 +1,17 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <libraryInfos>
     <libraryInfo home="C:\Users\gonza\.p2\pool\plugins\org.eclipse.justj.openjdk.hotspot.jre.full.win32.x86_64_23.0.2.v20250131-0604\jre" version="23.0.2"/>
+    <libraryInfo home="C:\Users\EVA\.p2\pool\plugins\org.eclipse.justj.openjdk.hotspot.jre.full.win32.x86_64_23.0.2.v20250131-0604" version="23.0.2">
+        <bootpath>
+            <entry path="null"/>
+        </bootpath>
+        <extensionDirs>
+            <entry path="null"/>
+        </extensionDirs>
+        <endorsedDirs>
+            <entry path="null"/>
+        </endorsedDirs>
+    </libraryInfo>
     <libraryInfo home="C:\Users\adric\.p2\pool\plugins\org.eclipse.justj.openjdk.hotspot.jre.full.win32.x86_64_22.0.2.v20240802-1626\jre" version="22.0.2"/>
     <libraryInfo home="C:\Users\gonza\.p2\pool\plugins\org.eclipse.justj.openjdk.hotspot.jre.full.win32.x86_64_23.0.2.v20250131-0604" version="23.0.2">
         <bootpath>
@@ -13,9 +24,8 @@
             <entry path="null"/>
         </endorsedDirs>
     </libraryInfo>
-    <libraryInfo home="C:\Users\Gonzalo\.p2\pool\plugins\org.eclipse.justj.openjdk.hotspot.jre.full.win32.x86_64_23.0.2.v20250131-0604\jre" version="23.0.2"/>
     <libraryInfo home="C:\Users\gonza\.p2\pool\plugins\org.eclipse.justj.openjdk.hotspot.jre.full.win32.x86_64_23.0.1.v20241024-1700\jre" version="23.0.1"/>
-    <libraryInfo home="C:\Users\adric\.p2\pool\plugins\org.eclipse.justj.openjdk.hotspot.jre.full.win32.x86_64_22.0.2.v20240802-1626" version="22.0.2">
+    <libraryInfo home="C:\Users\alexs\.p2\pool\plugins\org.eclipse.justj.openjdk.hotspot.jre.full.win32.x86_64_23.0.0.v20240919-1706" version="23">
         <bootpath>
             <entry path="null"/>
         </bootpath>
@@ -26,7 +36,8 @@
             <entry path="null"/>
         </endorsedDirs>
     </libraryInfo>
-    <libraryInfo home="C:\Users\alexs\.p2\pool\plugins\org.eclipse.justj.openjdk.hotspot.jre.full.win32.x86_64_23.0.0.v20240919-1706" version="23">
+    <libraryInfo home="C:\Users\Gonzalo\.p2\pool\plugins\org.eclipse.justj.openjdk.hotspot.jre.full.win32.x86_64_23.0.2.v20250131-0604\jre" version="23.0.2"/>
+    <libraryInfo home="C:\Users\adric\.p2\pool\plugins\org.eclipse.justj.openjdk.hotspot.jre.full.win32.x86_64_22.0.2.v20240802-1626" version="22.0.2">
         <bootpath>
             <entry path="null"/>
         </bootpath>
@@ -48,6 +59,7 @@
             <entry path="null"/>
         </endorsedDirs>
     </libraryInfo>
+    <libraryInfo home="C:\Users\EVA\.p2\pool\plugins\org.eclipse.justj.openjdk.hotspot.jre.full.win32.x86_64_23.0.2.v20250131-0604\jre" version="23.0.2"/>
     <libraryInfo home="C:\Users\alexs\.p2\pool\plugins\org.eclipse.justj.openjdk.hotspot.jre.full.win32.x86_64_23.0.0.v20240919-1706\jre" version="23"/>
     <libraryInfo home="C:\Users\Gonzalo\.p2\pool\plugins\org.eclipse.justj.openjdk.hotspot.jre.full.win32.x86_64_23.0.2.v20250131-0604" version="23.0.2">
         <bootpath>

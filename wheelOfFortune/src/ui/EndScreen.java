@@ -1,5 +1,8 @@
 package ui;
 
+import game.Game;
+import players.Player; 
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
@@ -10,7 +13,7 @@ import javax.imageio.ImageIO;
 public class EndScreen extends JFrame {
     private BufferedImage backgroundImage;
 
-    public EndScreen(String winnerName, int totalMoney) {
+    public EndScreen(String winnerName, int totalMoney, Game game) {
         setTitle("Game Over!");
         setSize(1270, 1266); // Tamaño de la imagen de fondo
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -65,6 +68,20 @@ public class EndScreen extends JFrame {
         exitButton.setBorder(BorderFactory.createLineBorder(Color.BLACK, 3)); // Borde
         exitButton.setFocusPainted(false);
         exitButton.addActionListener(e -> System.exit(0));
+        
+     // Play Again Button
+        JButton playAgainButton = new JButton("Play Again");
+        playAgainButton.setFont(new Font("Arial Black", Font.BOLD, 30));
+        playAgainButton.setBackground(Color.GREEN);
+        playAgainButton.setForeground(Color.WHITE);
+        playAgainButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+        playAgainButton.setBorder(BorderFactory.createLineBorder(Color.BLACK, 3));
+        playAgainButton.setFocusPainted(false);
+        playAgainButton.addActionListener(e -> {
+            game.restartGame();  // Restart the game when Play Again is clicked
+            setVisible(false);    // Hide the EndScreen
+            dispose();            // Dispose of the current EndScreen window
+        });
 
         textPanel.add(Box.createVerticalStrut(50));
         textPanel.add(winnerLabel);
@@ -73,6 +90,10 @@ public class EndScreen extends JFrame {
         textPanel.add(Box.createVerticalStrut(40));
         textPanel.add(exitButton);
         textPanel.add(Box.createVerticalStrut(50));
+        textPanel.add(playAgainButton); 
+        
+        textPanel.setPreferredSize(new Dimension(700, 500));  // Adjust as needed
+        panel.setPreferredSize(new Dimension(1270, 1266));
 
         textPanel.setMaximumSize(new Dimension(700, 350)); // Ajustar el tamaño del panel de texto
 
@@ -90,7 +111,5 @@ public class EndScreen extends JFrame {
         return new ImageIcon(resizedImg);
     }
 
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> new EndScreen("Player 1", 110).setVisible(true));
-    }
+    
 }
