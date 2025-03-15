@@ -78,7 +78,7 @@ public class EndScreen extends JFrame {
         playAgainButton.setBorder(BorderFactory.createLineBorder(Color.BLACK, 3));
         playAgainButton.setFocusPainted(false);
         playAgainButton.addActionListener(e -> {
-            game.restartGame();  // Restart the game when Play Again is clicked
+            new GameUI();  // Restart the game when Play Again is clicked
             setVisible(false);    // Hide the EndScreen
             dispose();            // Dispose of the current EndScreen window
         });
