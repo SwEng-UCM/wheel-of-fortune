@@ -34,7 +34,7 @@ public class GameUI extends JFrame {
         setLayout(new BorderLayout(10, 10));
         setSize(800, 500);
 
-        this.game = new Game(this); // 🔹 Pasar referencia de la ventana actual
+        this.game = Game.getInstance(this);  // cambiado para que funcione con el uso del singleton
 
         registerPlayers();
         initGameState();
