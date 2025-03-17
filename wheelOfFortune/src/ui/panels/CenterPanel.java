@@ -17,6 +17,7 @@ public class CenterPanel extends JPanel {
     private JTextField letterInput;
     private JLabel currentPlayerLabel;
     private JButton buyVowelButton;
+    private JButton solveButton; //Button to solve the pannel
 
     // Panel para mostrar las carteras (wallets) de los jugadores
     private JPanel walletPanel;
@@ -26,11 +27,24 @@ public class CenterPanel extends JPanel {
 public CenterPanel(GameUI gameUI) {
     this.gameUI = gameUI;
     this.budgetLabels = new ArrayList<>();
+    solveButton = new JButton("SOLVE");
+    solveButton.setFont(new Font("Arial", Font.BOLD, 16));
+    solveButton.setBackground(Color.ORANGE);
+    solveButton.setForeground(Color.BLACK);
+    solveButton.setFocusPainted(false);
+
+    solveButton.addActionListener(e -> {
+        String playerSolution = JOptionPane.showInputDialog(this, "Enter the full phrase:");
+        if (playerSolution != null && !playerSolution.trim().isEmpty()) {
+            gameUI.attemptSolve(playerSolution.trim());
+        }
+    });
 
     setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 
     JPanel actionPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 10));
-
+    
+    actionPanel.add(solveButton);
     spinButton = new JButton("Spin");
     spinButton.setFont(new Font("Arial", Font.BOLD, 16));
     spinButton.addActionListener(e -> {

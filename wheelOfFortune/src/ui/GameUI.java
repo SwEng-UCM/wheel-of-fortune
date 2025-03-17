@@ -348,6 +348,26 @@ public boolean guessLetter(String guessText) {
 
         updateUIState();
     }
+    
+    public void attemptSolve(String solution) {
+        if (gameOver) {
+            bottomPanel.appendMessage("❌ The game is already over!");
+            return;
+        }
+
+        if (solution.equalsIgnoreCase(selectedPhrase)) {
+            bottomPanel.appendMessage("🎉 " + game.getCurrentPlayerName() + " solved the puzzle! The phrase was: " + selectedPhrase);
+            revealed = selectedPhrase.toCharArray();  // Revelar la frase
+            gameOver = true;
+            game.setRevealed(revealed);
+            updateUIState();
+            game.checkGameOver();
+        } else {
+            bottomPanel.appendMessage("❌ Incorrect solution! " + game.getCurrentPlayerName() + " loses their turn.");
+            game.nextTurn();
+            updateUIState();
+        }
+    }
 
 }
 
