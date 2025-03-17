@@ -116,6 +116,7 @@ public void spinWheel() {
                 currentPlayer.addMoney(-currentPlayer.getMoney()); // Pierde todo su dinero
                 bottomPanel.appendMessage("💸 " + currentPlayer.getName() + " has gone BANKRUPT! All money lost.");
                 
+                isX2Active = false; // 🔹 Si el jugador pierde el turno, el x2 desaparece
                 game.nextTurn();
                 updateUIState();
                 hasSpun = false;
@@ -125,6 +126,7 @@ public void spinWheel() {
             if (sliceResult.equalsIgnoreCase("Lose Turn")) {
                 bottomPanel.appendMessage("⛔ " + game.getCurrentPlayerName() + " has lost their turn! Next player.");
                 
+                isX2Active = false; // 🔹 Se desactiva x2 si el turno cambia
                 game.nextTurn();
                 updateUIState();
                 hasSpun = false;
@@ -177,7 +179,7 @@ public boolean guessLetter(String guessText) {
 
         if (isX2Active) {
             amountWon *= 2; // 🔹 Duplica solo la primera consonante acertada
-            isX2Active = false; // 🔹 El X2 deja de estar activo después del primer acierto
+            isX2Active = false; // 🔹 El X2 se desactiva después de aplicarse
             bottomPanel.appendMessage("💥 X2 ACTIVE! " + currentPlayer.getName() + " wins DOUBLE money: $" + amountWon);
         }
 
@@ -196,6 +198,8 @@ public boolean guessLetter(String guessText) {
         }
     } else {
         bottomPanel.appendMessage("✖ Letter '" + guessedLetter + "' is not in the phrase. Next player!");
+        
+        isX2Active = false; // 🔹 Si no acierta nada, se desactiva x2 al cambiar de turno
         game.nextTurn();
         updateUIState();
     }
