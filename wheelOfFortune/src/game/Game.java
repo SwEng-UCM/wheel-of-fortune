@@ -3,6 +3,7 @@ package game;
 import players.Player;
 import ui.Console;
 import ui.EndScreen;
+import ui.GameUI;
 import utils.InputHelper;
 import java.util.ArrayList;
 import java.util.List;
@@ -248,10 +249,32 @@ public class Game {
     }
 
     public void restartGame() {
+        // Reiniciar los datos del juego
         players.clear();
         currentPlayerIndex = 0;
         isGameOver = false;
         hasSpun = false;
-        start();
+
+        // Cerrar la ventana anterior si existe
+        if (gameWindow != null) {
+            gameWindow.dispose();
+        }
+
+        // Crear una nueva instancia de la UI
+        SwingUtilities.invokeLater(() -> {
+            GameUI newGameUI = new GameUI();
+            setGameWindow(newGameUI); // Guardar referencia de la nueva ventana
+        });
     }
+
+    
+
+    public JFrame getGameWindow() {
+        return gameWindow;
+    }
+
+    public void setGameWindow(JFrame window) {
+        this.gameWindow = window;
+    }
+
 }

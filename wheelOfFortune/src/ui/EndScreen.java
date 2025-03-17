@@ -15,7 +15,7 @@ public class EndScreen extends JFrame {
 
     public EndScreen(String winnerName, int totalMoney, Game game) {
         setTitle("Game Over!");
-        setSize(1270, 1266); // Tamaño de la imagen de fondo
+        setSize(900, 700); // Tamaño de la imagen de fondo
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
 
@@ -78,8 +78,8 @@ public class EndScreen extends JFrame {
         playAgainButton.setBorder(BorderFactory.createLineBorder(Color.BLACK, 3));
         playAgainButton.setFocusPainted(false);
         playAgainButton.addActionListener(e -> {
-            new GameUI();  // Restart the game when Play Again is clicked
-            setVisible(false);    // Hide the EndScreen
+        	Game.getInstance(null).restartGame();  // Restart the game when Play Again is clicked
+                // Hide the EndScreen
             dispose();            // Dispose of the current EndScreen window
         });
 
