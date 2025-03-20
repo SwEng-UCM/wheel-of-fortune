@@ -179,9 +179,12 @@ public class Game {
         if (phraseCompleted) {
             isGameOver = true;
             Player winner = players.get(currentPlayerIndex);
-            SwingUtilities.invokeLater(() -> new EndScreen(winner.getName(), winner.getMoney(), this).setVisible(true));
+            
+            // Llamar correctamente a EndScreen con el jugador como parámetro
+            SwingUtilities.invokeLater(() -> new EndScreen(winner, this).setVisible(true));
         }
     }
+
 
     public void setRevealed(char[] updatedRevealed) {
         this.revealed = updatedRevealed;
