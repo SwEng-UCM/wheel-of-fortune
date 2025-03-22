@@ -43,6 +43,14 @@ public class UsedLettersPanel extends JPanel {
             updateDisplay();
         }
     }
+    /**
+     * Checks if a letter has already been used.
+     * @param letter the letter to check.
+     * @return true if the letter is already used, false otherwise.
+     */
+    public boolean isLetterUsed(char letter) {
+        return usedLetters.contains(Character.toUpperCase(letter));
+    }
 
     /**
      * Updates the label to show the current used letters.

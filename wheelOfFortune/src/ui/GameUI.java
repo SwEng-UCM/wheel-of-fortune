@@ -166,6 +166,12 @@ public boolean guessLetter(String guessText) {
 
     char guessedLetter = guessText.charAt(0);
     
+    // Check if the letter has already been used
+    if (usedLettersPanel.isLetterUsed(guessedLetter)) {
+        bottomPanel.appendMessage("❌ Letter '" + guessedLetter + "' has already been used. Try a different letter.");
+        return false;
+    }
+    
     usedLettersPanel.addLetter(Character.toUpperCase(guessedLetter));
 
     // Evitar que intenten adivinar vocales en un turno normal
