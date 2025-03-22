@@ -5,6 +5,7 @@ import players.Player;
 import ui.panels.TopPanel;
 import ui.panels.CenterPanel;
 import ui.panels.BottomPanel;
+import ui.panels.UsedLettersPanel;
 
 import javax.swing.*;
 import java.awt.*;
@@ -24,6 +25,7 @@ public class GameUI extends JFrame {
     private TopPanel topPanel;
     private CenterPanel centerPanel;
     private BottomPanel bottomPanel;
+    private UsedLettersPanel usedLettersPanel;
     
  
 
@@ -46,8 +48,14 @@ public class GameUI extends JFrame {
         centerPanel = new CenterPanel(this);
         add(centerPanel, BorderLayout.CENTER);
 
+        // Create the bottom panel container that holds the existing BottomPanel and the new UsedLettersPanel
         bottomPanel = new BottomPanel(this);
-        add(bottomPanel, BorderLayout.SOUTH);
+        usedLettersPanel = new UsedLettersPanel();
+        JPanel southContainer = new JPanel(new BorderLayout());
+        southContainer.add(bottomPanel, BorderLayout.CENTER);
+        southContainer.add(usedLettersPanel, BorderLayout.SOUTH);
+        add(southContainer, BorderLayout.SOUTH);
+
 
         updateUIState(); // Actualiza la frase, el turno y las carteras
 
@@ -157,6 +165,8 @@ public boolean guessLetter(String guessText) {
     if (gameOver || !hasSpun) return false;
 
     char guessedLetter = guessText.charAt(0);
+    
+    usedLettersPanel.addLetter(Character.toUpperCase(guessedLetter));
 
     // Evitar que intenten adivinar vocales en un turno normal
     if ("AEIOU".indexOf(guessedLetter) != -1) {
@@ -368,6 +378,14 @@ public boolean guessLetter(String guessText) {
             updateUIState();
         }
     }
+    /**
+     * This method can be called from the game logic to add a letter to the used letters panel.
+     * @param letter the letter that was used.
+     */
+    public void addUsedLetter(char letter) {
+        usedLettersPanel.addLetter(letter);
+    }
+
 
 }
 
