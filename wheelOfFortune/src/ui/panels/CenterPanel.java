@@ -3,6 +3,8 @@ package ui.panels;
 import ui.GameUI;
 import game.GuessLetterCommand;
 import players.Player;
+import game.BuyVowelCommand;
+
 
 import javax.swing.*;
 import java.awt.*;
@@ -75,16 +77,23 @@ public class CenterPanel extends JPanel {
 
         buyVowelButton = new JButton("Buy Vowel ($75)");
         buyVowelButton.setFont(new Font("Arial", Font.BOLD, 16));
+        
+        
         buyVowelButton.addActionListener(e -> {
             String vowelText = letterInput.getText().trim().toUpperCase();
             if (vowelText.length() != 1 || !"AEIOU".contains(vowelText)) {
                 JOptionPane.showMessageDialog(CenterPanel.this, "You can only buy vowels (A, E, I, O, U).");
                 return;
             }
-            gameUI.buyVowel(vowelText);
+            char vowel = vowelText.charAt(0);
+            BuyVowelCommand command = new BuyVowelCommand(gameUI, vowel);
+            gameUI.getCommandManager().executeCommand(command);
             letterInput.setText("");
             refreshButtons();
         });
+        
+        
+        
         actionPanel.add(buyVowelButton);
 
         undoButton = new JButton("Undo");

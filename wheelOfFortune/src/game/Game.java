@@ -279,5 +279,10 @@ public class Game {
     public void setGameWindow(JFrame window) {
         this.gameWindow = window;
     }
+    
+    public char[] getRevealed() {
+        return revealed;
+    }
+
 
 }

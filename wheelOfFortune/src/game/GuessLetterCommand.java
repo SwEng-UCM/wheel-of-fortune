@@ -9,6 +9,8 @@ public class GuessLetterCommand implements Command {
     private char[] previousRevealed;
     private int currentPlayerIndex;
     private int previousMoney;
+    private boolean letterWasUsedBefore;
+
 
     public GuessLetterCommand(GameUI gameUI, char guessedLetter) {
         this.gameUI = gameUI;
@@ -17,6 +19,8 @@ public class GuessLetterCommand implements Command {
 
     @Override
     public void execute() {
+    	letterWasUsedBefore = gameUI.getUsedLettersPanel().isLetterUsed(guessedLetter);
+    	
         Game game = gameUI.getGame();
         currentPlayerIndex = game.getCurrentPlayerIndex();
         Player currentPlayer = game.getPlayers().get(currentPlayerIndex);
@@ -25,16 +29,26 @@ public class GuessLetterCommand implements Command {
 
         gameUI.guessLetter(String.valueOf(guessedLetter));
     }
+    
+@Override
+public void undo() {
+    Game game = gameUI.getGame();
+    Player currentPlayer = game.getPlayers().get(currentPlayerIndex);
 
-    @Override
-    public void undo() {
-        Game game = gameUI.getGame();
-        Player currentPlayer = game.getPlayers().get(currentPlayerIndex);
+    // Restaurar estado anterior
+    currentPlayer.addMoney(previousMoney - currentPlayer.getMoney());
 
-        // Restaurar estado anterior
-        currentPlayer.addMoney(previousMoney - currentPlayer.getMoney());
-        game.setRevealed(previousRevealed.clone());
-        gameUI.setGameOver(false);
-        gameUI.updateUIState();
+    // Restaurar la frase revelada
+    game.setRevealed(previousRevealed.clone());
+    gameUI.synchronizeRevealed(); // ✅ Sincroniza visual con lógica
+
+    gameUI.setGameOver(false);
+
+    // Quitar la letra si no estaba usada antes
+    if (!letterWasUsedBefore) {
+        gameUI.getUsedLettersPanel().removeLetter(guessedLetter);
     }
+
+    gameUI.updateUIState(); // Refresca los paneles visuales
+}
 }

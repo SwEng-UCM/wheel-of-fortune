@@ -77,6 +77,10 @@ public class GameUI extends JFrame {
     public Game getGame() {
         return game;
     }
+    public UsedLettersPanel getUsedLettersPanel() {
+        return usedLettersPanel;
+    }
+
     public String getSelectedPhrase() {
         return selectedPhrase;
     }
@@ -197,6 +201,7 @@ public class GameUI extends JFrame {
         }
 
         hasSpun = false;
+        game.setRevealed(revealed.clone());
         updateUIState();
         return occurrences > 0;
     }
@@ -347,4 +352,26 @@ private void registerPlayers() {
     public static void main(String[] args) {
         SwingUtilities.invokeLater(GameUI::new);
     }
+    
+    public void undoLastGuess(char letterToUndo, char[] previousRevealed, int previousPlayerMoney, int playerIndex) {
+        // 1. Eliminar la letra del panel visual de letras usadas.
+        usedLettersPanel.removeLetter(letterToUndo);
+
+        // 2. Restaurar la frase revelada al estado anterior.
+        this.revealed = previousRevealed.clone(); 
+
+        // 3. Restaurar el dinero del jugador al estado anterior.
+        Player player = game.getPlayers().get(playerIndex);
+        int moneyDiff = previousPlayerMoney - player.getMoney();
+        player.addMoney(moneyDiff);
+
+        // 4. Actualizar visualmente el juego.
+        updateUIState();
+        bottomPanel.appendMessage("↩️ Undo performed: Letter '" + letterToUndo + "' removed.");
+    }
+    public void synchronizeRevealed() {
+        this.revealed = game.getRevealed().clone();
+    }
+
+
 }
