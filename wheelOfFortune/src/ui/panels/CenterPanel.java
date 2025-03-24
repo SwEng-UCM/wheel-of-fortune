@@ -4,6 +4,8 @@ import ui.GameUI;
 import game.GuessLetterCommand;
 import players.Player;
 import game.BuyVowelCommand;
+import game.SolveCommand;
+
 
 
 import javax.swing.*;
@@ -37,12 +39,18 @@ public class CenterPanel extends JPanel {
         solveButton.setBackground(Color.ORANGE);
         solveButton.setForeground(Color.BLACK);
         solveButton.setFocusPainted(false);
+        
+        
+        
         solveButton.addActionListener(e -> {
             String playerSolution = JOptionPane.showInputDialog(this, "Enter the full phrase:");
             if (playerSolution != null && !playerSolution.trim().isEmpty()) {
-                gameUI.attemptSolve(playerSolution.trim());
+                SolveCommand command = new SolveCommand(gameUI, playerSolution.trim());
+                gameUI.getCommandManager().executeCommand(command);
             }
         });
+        
+        
         actionPanel.add(solveButton);
 
         spinButton = new JButton("Spin");

@@ -283,6 +283,10 @@ public class Game {
     public char[] getRevealed() {
         return revealed;
     }
+    
+    public void setCurrentPlayerIndex(int index) {
+        this.currentPlayerIndex = index;
+    }
 
 
 }

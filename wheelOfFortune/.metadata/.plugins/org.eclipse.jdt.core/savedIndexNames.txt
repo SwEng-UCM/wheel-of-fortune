@@ -1,4 +1,0 @@
-INDEX VERSION 1.134+C:\Users\EVA\OneDrive\Desktop\WHEEL OF FORTUNE\.metadata\.plugins\org.eclipse.jdt.core
-2806119964.index
-1865797976.index
-2064735783.index
