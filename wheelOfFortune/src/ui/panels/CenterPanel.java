@@ -1,12 +1,11 @@
 package ui.panels;
 
 import ui.GameUI;
+import game.GuessLetterCommand;
 import players.Player;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.util.List;
 import java.util.ArrayList;
 
@@ -14,108 +13,108 @@ public class CenterPanel extends JPanel {
     private GameUI gameUI;
     private JButton spinButton;
     private JButton guessButton;
+    private JButton undoButton;
     private JTextField letterInput;
     private JLabel currentPlayerLabel;
     private JButton buyVowelButton;
-    private JButton solveButton; //Button to solve the pannel
+    private JButton solveButton;
 
-    // Panel para mostrar las carteras (wallets) de los jugadores
     private JPanel walletPanel;
-    // Lista de etiquetas para actualizar el dinero de cada jugador
     private List<JLabel> budgetLabels;
 
-public CenterPanel(GameUI gameUI) {
-    this.gameUI = gameUI;
-    this.budgetLabels = new ArrayList<>();
-    solveButton = new JButton("SOLVE");
-    solveButton.setFont(new Font("Arial", Font.BOLD, 16));
-    solveButton.setBackground(Color.ORANGE);
-    solveButton.setForeground(Color.BLACK);
-    solveButton.setFocusPainted(false);
+    public CenterPanel(GameUI gameUI) {
+        this.gameUI = gameUI;
+        this.budgetLabels = new ArrayList<>();
 
-    solveButton.addActionListener(e -> {
-        String playerSolution = JOptionPane.showInputDialog(this, "Enter the full phrase:");
-        if (playerSolution != null && !playerSolution.trim().isEmpty()) {
-            gameUI.attemptSolve(playerSolution.trim());
-        }
-    });
+        setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 
-    setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+        JPanel actionPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 10));
 
-    JPanel actionPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 10));
-    
-    actionPanel.add(solveButton);
-    spinButton = new JButton("Spin");
-    spinButton.setFont(new Font("Arial", Font.BOLD, 16));
-    spinButton.addActionListener(e -> {
-        gameUI.spinWheel();
+        solveButton = new JButton("SOLVE");
+        solveButton.setFont(new Font("Arial", Font.BOLD, 16));
+        solveButton.setBackground(Color.ORANGE);
+        solveButton.setForeground(Color.BLACK);
+        solveButton.setFocusPainted(false);
+        solveButton.addActionListener(e -> {
+            String playerSolution = JOptionPane.showInputDialog(this, "Enter the full phrase:");
+            if (playerSolution != null && !playerSolution.trim().isEmpty()) {
+                gameUI.attemptSolve(playerSolution.trim());
+            }
+        });
+        actionPanel.add(solveButton);
+
+        spinButton = new JButton("Spin");
+        spinButton.setFont(new Font("Arial", Font.BOLD, 16));
+        spinButton.addActionListener(e -> {
+            gameUI.spinWheel();
+            refreshButtons();
+        });
+        actionPanel.add(spinButton);
+
+        actionPanel.add(new JLabel("Letter:"));
+
+        letterInput = new JTextField(3);
+        letterInput.setFont(new Font("Arial", Font.PLAIN, 16));
+        actionPanel.add(letterInput);
+
+        guessButton = new JButton("Guess Letter");
+        guessButton.setFont(new Font("Arial", Font.BOLD, 16));
+        guessButton.addActionListener(e -> {
+            String guessText = letterInput.getText().trim().toUpperCase();
+            if (guessText.length() != 1) {
+                JOptionPane.showMessageDialog(CenterPanel.this, "Enter a single letter.");
+                return;
+            }
+            char guessedChar = guessText.charAt(0);
+            GuessLetterCommand command = new GuessLetterCommand(gameUI, guessedChar);
+            gameUI.getCommandManager().executeCommand(command);
+            letterInput.setText("");
+            refreshButtons();
+        });
+        actionPanel.add(guessButton);
+
+        buyVowelButton = new JButton("Buy Vowel ($75)");
+        buyVowelButton.setFont(new Font("Arial", Font.BOLD, 16));
+        buyVowelButton.addActionListener(e -> {
+            String vowelText = letterInput.getText().trim().toUpperCase();
+            if (vowelText.length() != 1 || !"AEIOU".contains(vowelText)) {
+                JOptionPane.showMessageDialog(CenterPanel.this, "You can only buy vowels (A, E, I, O, U).");
+                return;
+            }
+            gameUI.buyVowel(vowelText);
+            letterInput.setText("");
+            refreshButtons();
+        });
+        actionPanel.add(buyVowelButton);
+
+        undoButton = new JButton("Undo");
+        undoButton.setFont(new Font("Arial", Font.BOLD, 16));
+        undoButton.addActionListener(e -> gameUI.getCommandManager().undo());
+        actionPanel.add(undoButton);
+
+        currentPlayerLabel = new JLabel("Turn: Unknown");
+        currentPlayerLabel.setFont(new Font("Arial", Font.BOLD, 16));
+        actionPanel.add(currentPlayerLabel);
+
+        add(actionPanel);
+
+        initWalletPanel();
         refreshButtons();
-    });
+    }
 
-    guessButton = new JButton("Guess Letter");
-    guessButton.setFont(new Font("Arial", Font.BOLD, 16));
-    guessButton.addActionListener(e -> {
-        String guessText = letterInput.getText().trim().toUpperCase();
-        if (guessText.length() != 1) {
-            JOptionPane.showMessageDialog(CenterPanel.this, "Enter a single letter.");
-            return;
-        }
-        gameUI.guessLetter(guessText);
-        letterInput.setText("");
-        refreshButtons();
-    });
-
-    buyVowelButton = new JButton("Buy Vowel ($75)"); //CAMBIAR AQUÍ TAMBIÉN EL PRECIO DE COMPRA DE VOCAL PARA QUE VISUALMENTE SE VEA BIEN
-    buyVowelButton.setFont(new Font("Arial", Font.BOLD, 16));
-    buyVowelButton.addActionListener(e -> {
-        String vowelText = letterInput.getText().trim().toUpperCase();
-        if (vowelText.length() != 1 || !"AEIOU".contains(vowelText)) {
-            JOptionPane.showMessageDialog(CenterPanel.this, "You can only buy vowels (A, E, I, O, U).");
-            return;
-        }
-        gameUI.buyVowel(vowelText);
-        letterInput.setText("");
-        refreshButtons();
-    });
-
-    letterInput = new JTextField(3);
-    letterInput.setFont(new Font("Arial", Font.PLAIN, 16));
-
-    currentPlayerLabel = new JLabel("Turn: Unknown");
-    currentPlayerLabel.setFont(new Font("Arial", Font.BOLD, 16));
-
-    actionPanel.add(spinButton);
-    actionPanel.add(new JLabel("Letter:"));
-    actionPanel.add(letterInput);
-    actionPanel.add(guessButton);
-    actionPanel.add(buyVowelButton);
-    actionPanel.add(currentPlayerLabel);
-
-    add(actionPanel);
-
-    initWalletPanel();
-    refreshButtons();
-}
-    /**
-     * Inicializa el panel de carteras. Se crea un sub-panel para cada jugador con estilo moderno:
-     * - Bordes redondeados y padding interno.
-     * - Fondo en colores personalizados.
-     */
     private void initWalletPanel() {
         List<Player> players = gameUI.getGame().getPlayers();
-        // Layout en grid: 1 fila, tantos columnas como jugadores, con espacios amplios
         walletPanel = new JPanel(new GridLayout(1, players.size(), 20, 10));
         walletPanel.setBackground(Color.WHITE);
         walletPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
-        // Paleta de colores personalizada para el fondo del presupuesto
         Color[] walletColors = {
-            new Color(52, 152, 219),  // Azul
-            new Color(231, 76, 60),   // Rojo
-            new Color(46, 204, 113),  // Verde
-            new Color(241, 196, 15),  // Amarillo
-            new Color(155, 89, 182),  // Morado
-            new Color(26, 188, 156)   // Turquesa
+            new Color(52, 152, 219),
+            new Color(231, 76, 60),
+            new Color(46, 204, 113),
+            new Color(241, 196, 15),
+            new Color(155, 89, 182),
+            new Color(26, 188, 156)
         };
 
         budgetLabels.clear();
@@ -125,33 +124,28 @@ public CenterPanel(GameUI gameUI) {
             JPanel playerPanel = new JPanel();
             playerPanel.setLayout(new BoxLayout(playerPanel, BoxLayout.Y_AXIS));
             playerPanel.setBorder(BorderFactory.createCompoundBorder(
-                    BorderFactory.createLineBorder(Color.DARK_GRAY, 2, true),
-                    BorderFactory.createEmptyBorder(10, 15, 10, 15)
+                BorderFactory.createLineBorder(Color.DARK_GRAY, 2, true),
+                BorderFactory.createEmptyBorder(10, 15, 10, 15)
             ));
             playerPanel.setBackground(Color.WHITE);
 
-            // Panel para dividir en dos mitades (avatar / info)
             JPanel splitPanel = new JPanel();
             splitPanel.setLayout(new BoxLayout(splitPanel, BoxLayout.X_AXIS));
             splitPanel.setBackground(Color.WHITE);
 
-            // --- Lado izquierdo: Avatar ---
             JPanel avatarPanel = new JPanel(new BorderLayout());
             avatarPanel.setBackground(Color.WHITE);
             JLabel avatarLabel = new JLabel();
             avatarLabel.setHorizontalAlignment(SwingConstants.CENTER);
             if (player.getAvatar() != null) {
-                // Redimensionar el avatar a un tamaño adecuado, por ejemplo 60x60 píxeles
                 Image image = player.getAvatar().getImage().getScaledInstance(60, 60, Image.SCALE_SMOOTH);
                 avatarLabel.setIcon(new ImageIcon(image));
             } else {
                 avatarLabel.setText("No Avatar");
             }
             avatarPanel.add(avatarLabel, BorderLayout.CENTER);
-            // Establece un tamaño preferido para esta mitad (puedes ajustar)
             avatarPanel.setPreferredSize(new Dimension(80, 60));
 
-            // --- Lado derecho: Nombre y dinero ---
             JPanel infoPanel = new JPanel();
             infoPanel.setLayout(new BoxLayout(infoPanel, BoxLayout.Y_AXIS));
             infoPanel.setBackground(Color.WHITE);
@@ -166,40 +160,27 @@ public CenterPanel(GameUI gameUI) {
             budgetLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
             budgetLabel.setPreferredSize(new Dimension(120, 40));
             budgetLabel.setMaximumSize(new Dimension(120, 40));
-            // Agregar espacios entre el nombre y el presupuesto
             infoPanel.add(nameLabel);
             infoPanel.add(Box.createVerticalStrut(8));
             infoPanel.add(budgetLabel);
 
-            // Agregar ambos paneles al splitPanel con un pequeño espacio horizontal entre ellos
             splitPanel.add(avatarPanel);
             splitPanel.add(Box.createHorizontalStrut(10));
             splitPanel.add(infoPanel);
 
-            // Agregar el splitPanel al panel del jugador
             playerPanel.add(splitPanel);
-
-            // Agregar el panel del jugador al walletPanel general
             walletPanel.add(playerPanel);
-
-            // Guardar la etiqueta para actualizar el dinero posteriormente
             budgetLabels.add(budgetLabel);
         }
 
         add(walletPanel);
     }
 
-    /**
-     * Actualiza la etiqueta que muestra el jugador actual.
-     */
     public void updateCurrentPlayer() {
         String currentPlayer = gameUI.getGame().getCurrentPlayerName();
         currentPlayerLabel.setText("Turn: " + currentPlayer);
     }
 
-    /**
-     * Actualiza las carteras mostrando el presupuesto actual de cada jugador.
-     */
     public void updateWallets() {
         List<Player> players = gameUI.getGame().getPlayers();
         for (int i = 0; i < players.size(); i++) {
@@ -209,19 +190,11 @@ public CenterPanel(GameUI gameUI) {
         }
     }
 
-    /**
-     * Habilita o deshabilita los botones según el estado del juego.
-     */
     private void refreshButtons() {
         boolean gameOver = gameUI.isGameOver();
         boolean hasSpun = gameUI.hasSpun();
 
-        if (gameOver) {
-            spinButton.setEnabled(false);
-            guessButton.setEnabled(false);
-        } else {
-            spinButton.setEnabled(!hasSpun);
-            guessButton.setEnabled(hasSpun);
-        }
+        spinButton.setEnabled(!gameOver && !hasSpun);
+        guessButton.setEnabled(!gameOver && hasSpun);
     }
 }
