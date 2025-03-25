@@ -2,19 +2,25 @@ package ui;
 
 import game.Game;
 import players.Player;
-
+import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import javax.imageio.ImageIO;
 
 public class EndScreen extends JFrame {
     private BufferedImage backgroundImage;
     private ImageIcon winnerAvatar;
 
-    public EndScreen(Player winner, Game game) {
+    /**
+     * Constructor that displays the final end screen.
+     *
+     * @param winner      The winning player.
+     * @param game        The Game instance.
+     * @param finalPhrase The final winning phrase/word.
+     */
+    public EndScreen(Player winner, Game game, String finalPhrase) {
         setTitle("Victory!");
         setSize(900, 700);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -44,89 +50,88 @@ public class EndScreen extends JFrame {
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
         panel.setOpaque(false);
 
-        // Banner Victory con sombra mejorada
+        // "VICTORY" label
         ShadowLabel victoryLabel = new ShadowLabel("VICTORY", 4, new Color(0, 0, 0, 180));
         victoryLabel.setFont(new Font("Arial Black", Font.BOLD, 65));
         victoryLabel.setForeground(Color.ORANGE);
         victoryLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        // Panel central más espacioso
+        // Final phrase label
+        ShadowLabel phraseLabel = new ShadowLabel("Final phrase: " + finalPhrase, 3, new Color(0, 0, 0, 150));
+        phraseLabel.setFont(new Font("Arial", Font.ITALIC | Font.BOLD, 32));
+        phraseLabel.setForeground(new Color(218, 165, 32));
+        phraseLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        // Info panel for winner's avatar, name, and earnings
         JPanel infoPanel = new JPanel();
         infoPanel.setLayout(new BoxLayout(infoPanel, BoxLayout.Y_AXIS));
         infoPanel.setBackground(new Color(50, 50, 100, 220));
         infoPanel.setBorder(BorderFactory.createLineBorder(Color.WHITE, 3));
-        infoPanel.setMaximumSize(new Dimension(500, 500)); // Más grande para mejor organización
+        infoPanel.setMaximumSize(new Dimension(500, 500));
 
         JLabel avatarLabel = new JLabel(winnerAvatar);
         avatarLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        // Nombre del ganador con sombra
         ShadowLabel winnerLabel = new ShadowLabel(winner.getName(), 3, new Color(0, 0, 0, 150));
         winnerLabel.setFont(new Font("Arial Black", Font.BOLD, 35));
         winnerLabel.setForeground(Color.WHITE);
         winnerLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        // Earnings con sombra
         ShadowLabel moneyLabel = new ShadowLabel("Earnings: $" + winner.getMoney(), 3, new Color(0, 0, 0, 150));
         moneyLabel.setFont(new Font("Arial", Font.BOLD, 32));
         moneyLabel.setForeground(Color.WHITE);
         moneyLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        JPanel buttonPanel = new JPanel();
-        buttonPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 20, 10));
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 10));
         buttonPanel.setOpaque(false);
 
-        // Botón Play Again
         JButton playAgainButton = new JButton("PLAY AGAIN");
         playAgainButton.setFont(new Font("Arial Black", Font.BOLD, 28));
         playAgainButton.setBackground(new Color(52, 152, 219));
         playAgainButton.setForeground(Color.WHITE);
         playAgainButton.setBorder(BorderFactory.createLineBorder(Color.BLACK, 3));
         playAgainButton.setFocusPainted(false);
-        playAgainButton.setPreferredSize(new Dimension(240, 70)); // Más grande
+        playAgainButton.setPreferredSize(new Dimension(240, 70));
         playAgainButton.addActionListener(e -> {
             Game.getInstance(null).restartGame();
             dispose();
         });
 
-        // Botón Exit
         JButton exitButton = new JButton("EXIT");
         exitButton.setFont(new Font("Arial Black", Font.BOLD, 28));
         exitButton.setBackground(new Color(30, 110, 170));
         exitButton.setForeground(Color.WHITE);
         exitButton.setBorder(BorderFactory.createLineBorder(Color.BLACK, 3));
         exitButton.setFocusPainted(false);
-        exitButton.setPreferredSize(new Dimension(180, 70)); // Más grande
+        exitButton.setPreferredSize(new Dimension(180, 70));
         exitButton.addActionListener(e -> System.exit(0));
 
-        // Asegurar que los botones estén bien alineados y con espacio
         buttonPanel.add(playAgainButton);
         buttonPanel.add(exitButton);
 
-        // Agregar espacio entre los elementos para mejor alineación
-        infoPanel.add(Box.createVerticalStrut(25)); // Espaciado superior
+        infoPanel.add(Box.createVerticalStrut(25));
         infoPanel.add(avatarLabel);
-        infoPanel.add(Box.createVerticalStrut(15)); // Espaciado entre avatar y nombre
+        infoPanel.add(Box.createVerticalStrut(15));
         infoPanel.add(winnerLabel);
-        infoPanel.add(Box.createVerticalStrut(10)); // Espaciado entre nombre y earnings
+        infoPanel.add(Box.createVerticalStrut(10));
         infoPanel.add(moneyLabel);
-        infoPanel.add(Box.createVerticalStrut(30)); // Más espacio antes de los botones
+        infoPanel.add(Box.createVerticalStrut(30));
         infoPanel.add(buttonPanel);
-        infoPanel.add(Box.createVerticalStrut(20)); // Espaciado inferior
-
+        infoPanel.add(Box.createVerticalStrut(20));
         infoPanel.setPreferredSize(new Dimension(500, 500));
 
-        // Ajustar el posicionamiento general
-        panel.add(Box.createVerticalStrut(40)); // Espacio superior antes del título
+        panel.add(Box.createVerticalStrut(40));
         panel.add(victoryLabel);
-        panel.add(Box.createVerticalStrut(30)); // Espacio entre "VICTORY" y el cuadro de información
+        panel.add(Box.createVerticalStrut(15));
+        panel.add(phraseLabel);
+        panel.add(Box.createVerticalStrut(30));
         panel.add(infoPanel);
-        panel.add(Box.createVerticalStrut(50)); // Espacio inferior para centrar mejor
+        panel.add(Box.createVerticalStrut(50));
 
         setContentPane(panel);
+        setVisible(true);
     }
 
-    // Clase interna para etiquetas con sombra mejorada
     private static class ShadowLabel extends JLabel {
         private final int shadowOffset;
         private final Color shadowColor;
@@ -155,3 +160,4 @@ public class EndScreen extends JFrame {
         }
     }
 }
+

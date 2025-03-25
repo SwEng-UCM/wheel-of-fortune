@@ -65,6 +65,7 @@ public class GameUI extends JFrame {
 
     private void initGameState() {
         selectedPhrase = game.getRandomPhrase();
+        game.setPhrase(selectedPhrase);
         revealed = new char[selectedPhrase.length()];
         for (int i = 0; i < selectedPhrase.length(); i++) {
             revealed[i] = (selectedPhrase.charAt(i) == ' ') ? ' ' : '_';
@@ -372,6 +373,7 @@ private void registerPlayers() {
     public void synchronizeRevealed() {
         this.revealed = game.getRevealed().clone();
     }
+    
 
 
 }

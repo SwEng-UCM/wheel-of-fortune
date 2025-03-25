@@ -5,20 +5,19 @@ import ui.Console;
 import ui.EndScreen;
 import ui.GameUI;
 import utils.InputHelper;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
 
 import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
 
 public class Game {
-    // Singleton: instancia única
+    // Singleton: single instance
     private static volatile Game instance;
 
     private List<Player> players;
@@ -26,13 +25,15 @@ public class Game {
     private List<String> phrases;
     private List<String> slices;
     private Player currentPlayer;
+
+    // NEW: Field to store the puzzle phrase
     private String phrase;
     private char[] revealed;
     private boolean isGameOver;
     private JFrame gameWindow;
-    private boolean hasSpun; 
+    private boolean hasSpun;
 
-    // Constructor privado para evitar instanciaciones externas
+    // Private constructor for the singleton
     private Game(JFrame gameWindow) {
         this.gameWindow = gameWindow;
         players = new ArrayList<>();
@@ -43,7 +44,7 @@ public class Game {
         loadSlices("slices.txt");
     }
 
-    // Método para obtener la única instancia del Singleton
+    // Singleton accessor
     public static Game getInstance(JFrame gameWindow) {
         if (instance == null) {
             synchronized (Game.class) {
@@ -57,7 +58,6 @@ public class Game {
 
     private void loadPhrasesFromFile(String fileName) {
         File file = new File(fileName);
-
         if (!file.exists()) {
             Console.showMessage("❌ ERROR: The file " + fileName + " does not exist in the directory.");
             return;
@@ -77,7 +77,6 @@ public class Game {
 
     private void loadSlices(String fileName) {
         File file = new File(fileName);
-
         if (!file.exists()) {
             Console.showMessage("❌ ERROR: The file " + fileName + " does not exist in the directory.");
             return;
@@ -93,6 +92,20 @@ public class Game {
         } catch (IOException e) {
             Console.showMessage("❌ Error loading slices: " + e.getMessage());
         }
+    }
+    /**
+     * Sets the puzzle phrase so that getSelectedPhrase() won't return null.
+     * @param puzzle The phrase chosen by the UI or logic.
+     */
+    public void setPhrase(String puzzle) {
+        this.phrase = puzzle;
+    }
+
+    /**
+     * Returns the currently selected puzzle phrase.
+     */
+    public String getSelectedPhrase() {
+        return phrase;
     }
 
     public void start() {
@@ -110,10 +123,12 @@ public class Game {
             return;
         }
 
-        String selectedPhrase = getRandomPhrase();
-        revealed = new char[selectedPhrase.length()];
-        for (int i = 0; i < selectedPhrase.length(); i++) {
-            revealed[i] = (selectedPhrase.charAt(i) == ' ') ? ' ' : '_';
+        // Store the puzzle in the 'phrase' field
+        this.phrase = getRandomPhrase();
+
+        revealed = new char[phrase.length()];
+        for (int i = 0; i < phrase.length(); i++) {
+            revealed[i] = (phrase.charAt(i) == ' ') ? ' ' : '_';
         }
 
         while (!isPhraseComplete(revealed)) {
@@ -124,9 +139,9 @@ public class Game {
             String sliceResult = randomSlice();
             int wheelValue = getSliceValue(sliceResult);
             Console.showMessage("\n🎡 SPIN THE WHEEL!!! 🎡\n" + sliceResult);
-            
+
             hasSpun = true;
-            
+
             String guess = InputHelper.getText("\n🔠 " + getCurrentPlayerName() + ", enter a letter: ");
             if (guess.length() != 1) {
                 Console.showMessage("Please enter a single letter.");
@@ -135,8 +150,8 @@ public class Game {
             char guessedLetter = Character.toUpperCase(guess.charAt(0));
             boolean correctGuess = false;
 
-            for (int i = 0; i < selectedPhrase.length(); i++) {
-                char originalChar = selectedPhrase.charAt(i);
+            for (int i = 0; i < phrase.length(); i++) {
+                char originalChar = phrase.charAt(i);
                 if (Character.toUpperCase(originalChar) == guessedLetter && revealed[i] == '_') {
                     revealed[i] = originalChar;
                     correctGuess = true;
@@ -152,8 +167,9 @@ public class Game {
                 nextTurn();
             }
         }
+
         displayPanel(revealed);
-        Console.showMessage("\n🎉 Congratulations! The phrase is complete: " + selectedPhrase);
+        Console.showMessage("\n🎉 Congratulations! The phrase is complete: " + phrase);
         checkGameOver();
     }
 
@@ -165,26 +181,27 @@ public class Game {
         }
         return true;
     }
-    
+
     private boolean phraseIsComplete() {
         return isPhraseComplete(revealed);
     }
 
     public void checkGameOver() {
         if (revealed == null) {
-            System.out.println("⚠️ ERROR: revealed es null en checkGameOver()");
+            System.out.println("⚠️ ERROR: revealed is null in checkGameOver()");
             return;
         }
         boolean phraseCompleted = phraseIsComplete();
         if (phraseCompleted) {
             isGameOver = true;
             Player winner = players.get(currentPlayerIndex);
-            
-            // Llamar correctamente a EndScreen con el jugador como parámetro
-            SwingUtilities.invokeLater(() -> new EndScreen(winner, this).setVisible(true));
+
+            // Now we can call EndScreen with the final phrase
+            SwingUtilities.invokeLater(() ->
+                new EndScreen(winner, this, getSelectedPhrase()).setVisible(true)
+            );
         }
     }
-
 
     public void setRevealed(char[] updatedRevealed) {
         this.revealed = updatedRevealed;
@@ -238,7 +255,7 @@ public class Game {
     public String getCurrentPlayerName() {
         return (!players.isEmpty()) ? players.get(currentPlayerIndex).getName() : "Unknown";
     }
-    
+
     public void addPlayer(Player player) {
         players.add(player);
     }
@@ -252,25 +269,23 @@ public class Game {
     }
 
     public void restartGame() {
-        // Reiniciar los datos del juego
+        // Reset game data
         players.clear();
         currentPlayerIndex = 0;
         isGameOver = false;
         hasSpun = false;
 
-        // Cerrar la ventana anterior si existe
+        // Close the previous window if it exists
         if (gameWindow != null) {
             gameWindow.dispose();
         }
 
-        // Crear una nueva instancia de la UI
+        // Create a new UI instance
         SwingUtilities.invokeLater(() -> {
             GameUI newGameUI = new GameUI();
-            setGameWindow(newGameUI); // Guardar referencia de la nueva ventana
+            setGameWindow(newGameUI); // Save reference to the new window
         });
     }
-
-    
 
     public JFrame getGameWindow() {
         return gameWindow;
@@ -279,14 +294,12 @@ public class Game {
     public void setGameWindow(JFrame window) {
         this.gameWindow = window;
     }
-    
+
     public char[] getRevealed() {
         return revealed;
     }
-    
+
     public void setCurrentPlayerIndex(int index) {
         this.currentPlayerIndex = index;
     }
-
-
 }
