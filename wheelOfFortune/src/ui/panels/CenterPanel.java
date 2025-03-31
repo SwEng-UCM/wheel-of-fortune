@@ -5,6 +5,7 @@ import game.GuessLetterCommand;
 import players.Player;
 import game.BuyVowelCommand;
 import game.SolveCommand;
+import game.SpinCommand;
 
 
 
@@ -56,9 +57,11 @@ public class CenterPanel extends JPanel {
         spinButton = new JButton("Spin");
         spinButton.setFont(new Font("Arial", Font.BOLD, 16));
         spinButton.addActionListener(e -> {
-            gameUI.spinWheel();
+            SpinCommand command = new SpinCommand(gameUI);
+            gameUI.getCommandManager().executeCommand(command);
             refreshButtons();
         });
+
         actionPanel.add(spinButton);
 
         actionPanel.add(new JLabel("Letter:"));
@@ -207,7 +210,7 @@ public class CenterPanel extends JPanel {
         }
     }
 
-    private void refreshButtons() {
+    public void refreshButtons() {
         boolean gameOver = gameUI.isGameOver();
         boolean hasSpun = gameUI.hasSpun();
 

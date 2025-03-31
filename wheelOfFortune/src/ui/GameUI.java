@@ -100,6 +100,37 @@ public class GameUI extends JFrame {
     public void setGameOver(boolean gameOver) {
         this.gameOver = gameOver;
     }
+    
+    
+    public boolean isX2Active() {
+        return isX2Active;
+    }
+
+    public void setX2Active(boolean x2Active) {
+        this.isX2Active = x2Active;
+    }
+
+    public int getCurrentSpinValue() {
+        return currentSpinValue;
+    }
+
+    public void setCurrentSpinValue(int value) {
+        this.currentSpinValue = value;
+    }
+    
+    public BottomPanel getBottomPanel() {
+        return bottomPanel;
+    }
+
+    public CenterPanel getCenterPanel() {
+        return centerPanel;
+    }
+
+
+    
+    
+    
+    
 
     public void updateUIState() {
         topPanel.updatePhraseLabel();
