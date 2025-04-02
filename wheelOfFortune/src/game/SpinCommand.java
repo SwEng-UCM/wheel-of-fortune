@@ -10,13 +10,20 @@ public class SpinCommand implements Command {
     private boolean previousX2Active;
     private boolean previousHasSpun;
     private int previousSpinValue;
+    private int messageCount;
+
 
     public SpinCommand(GameUI gameUI) {
         this.gameUI = gameUI;
     }
 
+
     @Override
     public void execute() {
+        // Guardar el texto completo antes de realizar el giro
+        int initialMessageCount = gameUI.getBottomPanel().getMessageCount();
+        messageCount = initialMessageCount;
+
         Game game = gameUI.getGame();
         currentPlayerIndex = game.getCurrentPlayerIndex();
         Player currentPlayer = game.getPlayers().get(currentPlayerIndex);
@@ -26,28 +33,33 @@ public class SpinCommand implements Command {
         previousHasSpun = gameUI.hasSpun();
         previousSpinValue = gameUI.getCurrentSpinValue();
 
+        // Realizar el giro
         gameUI.spinWheel();
+
+        // Calcular el número de mensajes generados
+        int finalMessageCount = gameUI.getBottomPanel().getMessageCount();
+        messageCount = finalMessageCount - initialMessageCount;
     }
 
-@Override
-public void undo() {
-    Game game = gameUI.getGame();
-    Player currentPlayer = game.getPlayers().get(currentPlayerIndex);
+    @Override
+    public void undo() {
+        Game game = gameUI.getGame();
+        Player currentPlayer = game.getPlayers().get(currentPlayerIndex);
 
-    // Restaurar el dinero
-    currentPlayer.addMoney(previousMoney - currentPlayer.getMoney());
+        // Restaurar el estado del jugador
+        currentPlayer.addMoney(previousMoney - currentPlayer.getMoney());
+        gameUI.setHasSpun(previousHasSpun);
+        gameUI.setX2Active(previousX2Active);
+        gameUI.setCurrentSpinValue(previousSpinValue);
+        game.setCurrentPlayerIndex(currentPlayerIndex);
 
-    // Restaurar el estado del giro y X2
-    gameUI.setHasSpun(previousHasSpun);
-    gameUI.setX2Active(previousX2Active);
-    gameUI.setCurrentSpinValue(previousSpinValue);
+        // Eliminar todos los mensajes generados por el último giro
+        clearAllMessages(gameUI, messageCount);
 
-    // Restaurar el turno si se perdió
-    game.setCurrentPlayerIndex(currentPlayerIndex);
+        gameUI.updateUIState();
+        gameUI.getCenterPanel().refreshButtons();
+    }
 
-    // Actualizar el estado de los botones
-    gameUI.updateUIState();
-    gameUI.getBottomPanel().appendMessage("↩️ Undo performed: Spin reversed.");
-    gameUI.getCenterPanel().refreshButtons();  // ✅ Actualizar el estado del botón Spin
-}
+
+
 }

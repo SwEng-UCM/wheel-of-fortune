@@ -10,6 +10,8 @@ public class GuessLetterCommand implements Command {
     private int currentPlayerIndex;
     private int previousMoney;
     private boolean letterWasUsedBefore;
+    private int messageCount;
+
 
 
     public GuessLetterCommand(GameUI gameUI, char guessedLetter) {
@@ -17,38 +19,41 @@ public class GuessLetterCommand implements Command {
         this.guessedLetter = guessedLetter;
     }
 
+
     @Override
     public void execute() {
-    	letterWasUsedBefore = gameUI.getUsedLettersPanel().isLetterUsed(guessedLetter);
-    	
+        int initialMessageCount = gameUI.getBottomPanel().getMessageCount();
+        messageCount = initialMessageCount;
+
         Game game = gameUI.getGame();
         currentPlayerIndex = game.getCurrentPlayerIndex();
         Player currentPlayer = game.getPlayers().get(currentPlayerIndex);
         previousRevealed = gameUI.getRevealed().clone();
         previousMoney = currentPlayer.getMoney();
 
+        // Adivinar la letra
         gameUI.guessLetter(String.valueOf(guessedLetter));
-    }
-    
-@Override
-public void undo() {
-    Game game = gameUI.getGame();
-    Player currentPlayer = game.getPlayers().get(currentPlayerIndex);
 
-    // Restaurar estado anterior
-    currentPlayer.addMoney(previousMoney - currentPlayer.getMoney());
-
-    // Restaurar la frase revelada
-    game.setRevealed(previousRevealed.clone());
-    gameUI.synchronizeRevealed(); // ✅ Sincroniza visual con lógica
-
-    gameUI.setGameOver(false);
-
-    // Quitar la letra si no estaba usada antes
-    if (!letterWasUsedBefore) {
-        gameUI.getUsedLettersPanel().removeLetter(guessedLetter);
+        int finalMessageCount = gameUI.getBottomPanel().getMessageCount();
+        messageCount = finalMessageCount - initialMessageCount;
     }
 
-    gameUI.updateUIState(); // Refresca los paneles visuales
-}
+    @Override
+    public void undo() {
+        Game game = gameUI.getGame();
+        Player currentPlayer = game.getPlayers().get(currentPlayerIndex);
+
+        currentPlayer.addMoney(previousMoney - currentPlayer.getMoney());
+        game.setRevealed(previousRevealed.clone());
+        gameUI.synchronizeRevealed();
+
+        if (!letterWasUsedBefore) {
+            gameUI.getUsedLettersPanel().removeLetter(guessedLetter);
+        }
+
+        clearAllMessages(gameUI, messageCount);
+        gameUI.updateUIState();
+    }
+
+
 }

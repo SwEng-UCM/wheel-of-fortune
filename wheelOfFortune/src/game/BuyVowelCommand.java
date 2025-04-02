@@ -9,21 +9,31 @@ public class BuyVowelCommand implements Command {
     private char[] previousRevealed;
     private int currentPlayerIndex;
     private int previousMoney;
+    private int messageCount;
+
 
     public BuyVowelCommand(GameUI gameUI, char vowel) {
         this.gameUI = gameUI;
         this.vowel = vowel;
     }
 
+    
     @Override
     public void execute() {
+        int initialMessageCount = gameUI.getBottomPanel().getMessageCount();
+        messageCount = initialMessageCount;
+
         Game game = gameUI.getGame();
         currentPlayerIndex = game.getCurrentPlayerIndex();
         Player currentPlayer = game.getPlayers().get(currentPlayerIndex);
         previousRevealed = gameUI.getRevealed().clone();
         previousMoney = currentPlayer.getMoney();
 
+        // Comprar la vocal
         gameUI.buyVowel(String.valueOf(vowel));
+
+        int finalMessageCount = gameUI.getBottomPanel().getMessageCount();
+        messageCount = finalMessageCount - initialMessageCount;
     }
 
     @Override
@@ -31,18 +41,16 @@ public class BuyVowelCommand implements Command {
         Game game = gameUI.getGame();
         Player currentPlayer = game.getPlayers().get(currentPlayerIndex);
 
-        // Restaurar dinero
         currentPlayer.addMoney(previousMoney - currentPlayer.getMoney());
-
-        // Restaurar frase revelada
         game.setRevealed(previousRevealed.clone());
         gameUI.synchronizeRevealed();
 
-        // Quitar la vocal del panel de letras usadas
         gameUI.getUsedLettersPanel().removeLetter(vowel);
 
-        // Refrescar la interfaz
-        gameUI.setGameOver(false);
+        clearAllMessages(gameUI, messageCount);
         gameUI.updateUIState();
     }
+
+
+
 }
