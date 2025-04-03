@@ -134,6 +134,7 @@ public class Game {
         while (!isPhraseComplete(revealed)) {
             displayPanel(revealed);
             assignTurn();
+            
 
             InputHelper.getText("\nPress Enter to spin the wheel...");
             String sliceResult = randomSlice();
@@ -158,7 +159,6 @@ public class Game {
                 }
             }
             if (correctGuess) {
-                Player currentPlayer = players.get(currentPlayerIndex);
                 currentPlayer.addMoney(wheelValue);
                 Console.showMessage("Good job! The letter " + guessedLetter + " is in the phrase.");
                 Console.showMessage(currentPlayer.getName() + " wins " + wheelValue + " money! Total: " + currentPlayer.getMoney());

@@ -4,6 +4,7 @@ import players.Player;
 import utils.InputHelper;
 import java.util.ArrayList;
 import java.util.List;
+import players.AutomaticPlayer;
 
 public class Console {
     public static void showMessage(String message) {
@@ -31,7 +32,12 @@ public class Console {
 
         for (int i = 0; i < numPlayers; i++) {
             String name = InputHelper.getText("📝 Enter the name of Player " + (i + 1) + ": ");
-            players.add(new Player(name));
+            String autoChoice = InputHelper.getText("Should " + name + " be an automatic player? (Y/N): ");
+            if (autoChoice.trim().equalsIgnoreCase("Y") || autoChoice.trim().equalsIgnoreCase("yes")) {
+                players.add(new AutomaticPlayer(name));
+            } else {
+                players.add(new Player(name));
+            }
         }
         return players;
     }

@@ -6,6 +6,8 @@ import ui.panels.TopPanel;
 import ui.panels.CenterPanel;
 import ui.panels.BottomPanel;
 import ui.panels.UsedLettersPanel;
+import players.AutomaticPlayer;
+
 
 import javax.swing.*;
 import java.awt.*;
@@ -125,17 +127,12 @@ public class GameUI extends JFrame {
     public CenterPanel getCenterPanel() {
         return centerPanel;
     }
-
-
-    
-    
-    
-    
-
+ 
     public void updateUIState() {
         topPanel.updatePhraseLabel();
         centerPanel.updateCurrentPlayer();
         centerPanel.updateWallets();
+        checkAutomaticTurn();
     }
 
     public void spinWheel() {
@@ -330,6 +327,13 @@ private void registerPlayers() {
         JTextField nameField = new JTextField(20);
         namePanel.add(nameField);
         panel.add(namePanel);
+        
+        // Automatic player option panel
+        JPanel autoPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        autoPanel.add(new JLabel("Automatic player?"));
+        JCheckBox automaticCheckBox = new JCheckBox();
+        autoPanel.add(automaticCheckBox);
+        panel.add(autoPanel);
 
         panel.add(Box.createVerticalStrut(10));
         panel.add(new JLabel("Select your avatar:"));
@@ -375,7 +379,13 @@ private void registerPlayers() {
             }
         }
 
-        Player player = new Player(playerName);
+        // Create an AutomaticPlayer if the checkbox is selected, else a normal Player.
+        Player player;
+        if (automaticCheckBox.isSelected()) {
+            player = new AutomaticPlayer(playerName);
+        } else {
+            player = new Player(playerName);
+        }
         player.setAvatar(avatars[avatarChoice]);
         game.addPlayer(player);
     }
@@ -404,6 +414,19 @@ private void registerPlayers() {
     public void synchronizeRevealed() {
         this.revealed = game.getRevealed().clone();
     }
+    private void checkAutomaticTurn() {
+        // Get the current player from the game.
+        players.Player currentPlayer = game.getPlayers().get(game.getCurrentPlayerIndex());
+        if (currentPlayer instanceof players.AutomaticPlayer) {
+            // Delay the automatic turn slightly (1 second) so the UI can update.
+            Timer timer = new Timer(1000, e -> {
+                ((players.AutomaticPlayer) currentPlayer).takeTurn(this);
+            });
+            timer.setRepeats(false);
+            timer.start();
+        }
+    }
+
     
 
 
