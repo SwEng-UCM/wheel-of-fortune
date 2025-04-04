@@ -7,8 +7,6 @@ import game.BuyVowelCommand;
 import game.SolveCommand;
 import game.SpinCommand;
 
-
-
 import javax.swing.*;
 import java.awt.*;
 import java.util.List;
@@ -20,7 +18,7 @@ public class CenterPanel extends JPanel {
     private JButton guessButton;
     private JButton undoButton;
     private JTextField letterInput;
-    private JLabel currentPlayerLabel;
+    private JLabel currentPlayerLabel;  
     private JButton buyVowelButton;
     private JButton solveButton;
 
@@ -31,8 +29,10 @@ public class CenterPanel extends JPanel {
         this.gameUI = gameUI;
         this.budgetLabels = new ArrayList<>();
 
+        // Use a vertical BoxLayout so components stack.
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 
+        // --- Action Panel: Buttons and Input (Centered) ---
         JPanel actionPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 10));
 
         solveButton = new JButton("SOLVE");
@@ -40,9 +40,6 @@ public class CenterPanel extends JPanel {
         solveButton.setBackground(Color.ORANGE);
         solveButton.setForeground(Color.BLACK);
         solveButton.setFocusPainted(false);
-        
-        
-        
         solveButton.addActionListener(e -> {
             String playerSolution = JOptionPane.showInputDialog(this, "Enter the full phrase:");
             if (playerSolution != null && !playerSolution.trim().isEmpty()) {
@@ -50,8 +47,6 @@ public class CenterPanel extends JPanel {
                 gameUI.getCommandManager().executeCommand(command);
             }
         });
-        
-        
         actionPanel.add(solveButton);
 
         spinButton = new JButton("Spin");
@@ -61,7 +56,6 @@ public class CenterPanel extends JPanel {
             gameUI.getCommandManager().executeCommand(command);
             refreshButtons();
         });
-
         actionPanel.add(spinButton);
 
         actionPanel.add(new JLabel("Letter:"));
@@ -88,8 +82,6 @@ public class CenterPanel extends JPanel {
 
         buyVowelButton = new JButton("Buy Vowel ($75)");
         buyVowelButton.setFont(new Font("Arial", Font.BOLD, 16));
-        
-        
         buyVowelButton.addActionListener(e -> {
             String vowelText = letterInput.getText().trim().toUpperCase();
             if (vowelText.length() != 1 || !"AEIOU".contains(vowelText)) {
@@ -102,9 +94,6 @@ public class CenterPanel extends JPanel {
             letterInput.setText("");
             refreshButtons();
         });
-        
-        
-        
         actionPanel.add(buyVowelButton);
 
         undoButton = new JButton("Undo");
@@ -112,11 +101,19 @@ public class CenterPanel extends JPanel {
         undoButton.addActionListener(e -> gameUI.getCommandManager().undo());
         actionPanel.add(undoButton);
 
-        currentPlayerLabel = new JLabel("Turn: Unknown");
-        currentPlayerLabel.setFont(new Font("Arial", Font.BOLD, 16));
-        actionPanel.add(currentPlayerLabel);
-
         add(actionPanel);
+
+        // --- Turn Panel: Display "Turn: X" clearly below the action buttons ---
+        JPanel turnPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 5));
+        currentPlayerLabel = new JLabel("Turn: Unknown");
+        currentPlayerLabel.setFont(new Font("Arial", Font.BOLD, 20));
+        currentPlayerLabel.setForeground(Color.MAGENTA);
+        currentPlayerLabel.setOpaque(true);
+        currentPlayerLabel.setBackground(Color.LIGHT_GRAY);
+        turnPanel.add(currentPlayerLabel);
+        // Add vertical spacing if desired.
+        turnPanel.setBorder(BorderFactory.createEmptyBorder(5, 0, 5, 0));
+        add(turnPanel);
 
         initWalletPanel();
         refreshButtons();
@@ -144,8 +141,8 @@ public class CenterPanel extends JPanel {
             JPanel playerPanel = new JPanel();
             playerPanel.setLayout(new BoxLayout(playerPanel, BoxLayout.Y_AXIS));
             playerPanel.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(Color.DARK_GRAY, 2, true),
-                BorderFactory.createEmptyBorder(10, 15, 10, 15)
+                    BorderFactory.createLineBorder(Color.DARK_GRAY, 2, true),
+                    BorderFactory.createEmptyBorder(10, 15, 10, 15)
             ));
             playerPanel.setBackground(Color.WHITE);
 
@@ -197,8 +194,18 @@ public class CenterPanel extends JPanel {
     }
 
     public void updateCurrentPlayer() {
-        String currentPlayer = gameUI.getGame().getCurrentPlayerName();
-        currentPlayerLabel.setText("Turn: " + currentPlayer);
+        // Get the current player from the game.
+        Player currentPlayer = gameUI.getGame().getPlayers().get(gameUI.getGame().getCurrentPlayerIndex());
+        String displayName = currentPlayer.getName();
+        if (currentPlayer instanceof players.AutomaticPlayer) {
+            displayName = "Automatic: " + displayName;
+        }
+        currentPlayerLabel.setText("Turn: " + displayName);
+        // Set the label to use a bold, 20pt font, black text, with no background.
+        currentPlayerLabel.setFont(new Font("Arial", Font.BOLD | Font.ITALIC, 18));
+        currentPlayerLabel.setForeground(new Color(34, 34, 34));
+        currentPlayerLabel.setOpaque(false); // Makes background transparent.
+        currentPlayerLabel.setHorizontalAlignment(SwingConstants.CENTER);
     }
 
     public void updateWallets() {
@@ -218,3 +225,4 @@ public class CenterPanel extends JPanel {
         guessButton.setEnabled(!gameOver && hasSpun);
     }
 }
+

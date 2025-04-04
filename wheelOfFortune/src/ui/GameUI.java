@@ -8,7 +8,7 @@ import ui.panels.BottomPanel;
 import ui.panels.UsedLettersPanel;
 import players.AutomaticPlayer;
 
-
+import java.awt.Color;
 import javax.swing.*;
 import java.awt.*;
 
@@ -145,7 +145,7 @@ public class GameUI extends JFrame {
                 if (sliceResult.equalsIgnoreCase("Bankrupt")) {
                     Player currentPlayer = game.getPlayers().get(game.getCurrentPlayerIndex());
                     currentPlayer.addMoney(-currentPlayer.getMoney());
-                    bottomPanel.appendMessage("💸 " + currentPlayer.getName() + " has gone BANKRUPT! All money lost.");
+                    bottomPanel.appendMessage("💸 " + currentPlayer.getName() + " has gone BANKRUPT! All money lost.", ColorPalette.HIGHLIGHT);
                     isX2Active = false;
                     game.nextTurn();
                     updateUIState();
@@ -171,7 +171,7 @@ public class GameUI extends JFrame {
 
                 hasSpun = true;
             } catch (Exception ex) {
-                bottomPanel.appendMessage("❌ Error spinning the wheel: " + ex.getMessage());
+                bottomPanel.appendMessage("❌ Error spinning the wheel: " + ex.getMessage(), ColorPalette.ERROR);
             }
         }
     }
@@ -182,14 +182,14 @@ public class GameUI extends JFrame {
         char guessedLetter = guessText.charAt(0);
 
         if (usedLettersPanel.isLetterUsed(guessedLetter)) {
-            bottomPanel.appendMessage("❌ Letter '" + guessedLetter + "' has already been used. Try a different letter.");
+            bottomPanel.appendMessage("❌ Letter '" + guessedLetter + "' has already been used. Try a different letter.", ColorPalette.ERROR);
             return false;
         }
 
         usedLettersPanel.addLetter(Character.toUpperCase(guessedLetter));
 
         if ("AEIOU".indexOf(guessedLetter) != -1) {
-            bottomPanel.appendMessage("❌ You can only guess consonants in your turn! Try again.");
+            bottomPanel.appendMessage("❌ You can only guess consonants in your turn! Try again.", ColorPalette.ERROR);
             return false;
         }
 
@@ -213,17 +213,17 @@ public class GameUI extends JFrame {
             }
 
             currentPlayer.addMoney(amountWon);
-            bottomPanel.appendMessage("✔ Good! Letter '" + guessedLetter + "' is in the phrase (" + occurrences + " occurrence" + (occurrences > 1 ? "s" : "") + "). " + currentPlayer.getName() + " wins $" + amountWon + "! Total: $" + currentPlayer.getMoney());
+            bottomPanel.appendMessage("✔ Good! Letter '" + guessedLetter + "' is in the phrase (" + occurrences + " occurrence" + (occurrences > 1 ? "s" : "") + "). " + currentPlayer.getName() + " wins $" + amountWon + "! Total: $" + currentPlayer.getMoney(), ColorPalette.SUCCESS);
 
             updateUIState();
             if (isPhraseComplete()) {
-                bottomPanel.appendMessage("🎉 Congratulations! The phrase is: " + selectedPhrase);
+                bottomPanel.appendMessage("🎉 Congratulations! The phrase is: " + selectedPhrase, ColorPalette.CUSTOM_PURPLE);
                 gameOver = true;
                 game.setRevealed(revealed);
                 game.checkGameOver();
             }
         } else {
-            bottomPanel.appendMessage("✖ Letter '" + guessedLetter + "' is not in the phrase. Next player!");
+            bottomPanel.appendMessage("✖ Letter '" + guessedLetter + "' is not in the phrase. Next player!", ColorPalette.ERROR);
             isX2Active = false;
             game.nextTurn();
             updateUIState();
@@ -247,7 +247,7 @@ public class GameUI extends JFrame {
 
         int vowelPrice = 75;
         if (currentPlayer.getMoney() < vowelPrice) {
-            bottomPanel.appendMessage("❌ Not enough money to buy a vowel!");
+            bottomPanel.appendMessage("❌ Not enough money to buy a vowel!", ColorPalette.WARNING);
             return;
         }
 
@@ -265,16 +265,16 @@ public class GameUI extends JFrame {
         }
 
         if (occurrences > 0) {
-            bottomPanel.appendMessage("✔ The vowel '" + guessedVowel + "' appears " + occurrences + " time(s).");
+            bottomPanel.appendMessage("✔ The vowel '" + guessedVowel + "' appears " + occurrences + " time(s).", ColorPalette.SUCCESS);
             updateUIState();
             if (isPhraseComplete()) {
-                bottomPanel.appendMessage("🎉 Congratulations! The phrase is: " + selectedPhrase);
+                bottomPanel.appendMessage("🎉 Congratulations! The phrase is: " + selectedPhrase, ColorPalette.CUSTOM_PURPLE);
                 gameOver = true;
                 game.setRevealed(revealed);
                 game.checkGameOver();
             }
         } else {
-            bottomPanel.appendMessage("❌ The vowel '" + guessedVowel + "' is NOT in the phrase.");
+            bottomPanel.appendMessage("❌ The vowel '" + guessedVowel + "' is NOT in the phrase.", ColorPalette.ERROR);
         }
 
         updateUIState();
@@ -282,7 +282,7 @@ public class GameUI extends JFrame {
 
     public void attemptSolve(String solution) {
         if (gameOver) {
-            bottomPanel.appendMessage("❌ The game is already over!");
+            bottomPanel.appendMessage("❌ The game is already over!", ColorPalette.ERROR);
             return;
         }
 
@@ -294,7 +294,7 @@ public class GameUI extends JFrame {
             updateUIState();
             game.checkGameOver();
         } else {
-            bottomPanel.appendMessage("❌ Incorrect solution! " + game.getCurrentPlayerName() + " loses their turn.");
+            bottomPanel.appendMessage("❌ Incorrect solution! " + game.getCurrentPlayerName() + " loses their turn.", ColorPalette.ERROR);
             game.nextTurn();
             updateUIState();
         }
@@ -427,7 +427,20 @@ private void registerPlayers() {
         }
     }
 
-    
+    public final class ColorPalette {
+        // Darker variants for a more subdued look:
+        public static final Color SPIN_RESULT = new Color(0, 0, 139);    // Dark Blue
+        public static final Color SUCCESS = new Color(0, 100, 0);        // Dark Green
+        public static final Color ERROR = new Color(139, 0, 0);          // Dark Red
+        public static final Color WARNING = new Color(255, 140, 0);      // Dark Orange
+        public static final Color INFO = new Color(0, 139, 139);         // Dark Cyan
+        public static final Color HIGHLIGHT = new Color(139, 0, 139);      // Dark Magenta
+        public static final Color CUSTOM_PURPLE = new Color(75, 0, 130);   // Indigo (Dark Purple)
+
+        private ColorPalette() {
+            // Prevent instantiation.
+        }
+    }
 
 
 }

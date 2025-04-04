@@ -1,8 +1,8 @@
 package ui.panels;
 
 import ui.GameUI;
-
 import javax.swing.*;
+import javax.swing.text.*;
 import java.awt.*;
 
 /**
@@ -10,45 +10,63 @@ import java.awt.*;
  */
 public class BottomPanel extends JPanel {
     private GameUI gameUI;
-    private JTextArea messageArea;
+    private JTextPane messagePane;
+    private StyledDocument doc;
 
     public BottomPanel(GameUI gameUI) {
         this.gameUI = gameUI;
         setLayout(new BorderLayout());
+        
+        setPreferredSize(new Dimension(800, 100));
 
-        messageArea = new JTextArea(6, 50);
-        messageArea.setEditable(false);
-        messageArea.setFont(new Font("SansSerif", Font.PLAIN, 14));
-        JScrollPane scrollPane = new JScrollPane(messageArea);
+        // Initialize the JTextPane for styled text
+        messagePane = new JTextPane();
+        messagePane.setEditable(false);
+        messagePane.setFont(new Font("SansSerif", Font.PLAIN, 18));
+        doc = messagePane.getStyledDocument();
+        
+        JScrollPane scrollPane = new JScrollPane(messagePane);
         add(scrollPane, BorderLayout.CENTER);
     }
 
     /**
-     * Añade un mensaje al área de texto.
+     * Appends a message in a specific color.
+     * @param message The text to display.
+     * @param color   The color for the message.
+     */
+    public void appendMessage(String message, Color color) {
+        Style style = messagePane.addStyle("Style", null);
+        StyleConstants.setForeground(style, color);
+        StyleConstants.setFontSize(style, 18);
+        try {
+            doc.insertString(doc.getLength(), message + "\n", style);
+        } catch (BadLocationException e) {
+            e.printStackTrace();
+        }
+        messagePane.setCaretPosition(doc.getLength());
+    }
+    
+    /**
+     * Appends a message in black (default).
      */
     public void appendMessage(String message) {
-        messageArea.append(message + "\n");
+        appendMessage(message, Color.BLACK);
+    }
+    
+    /**
+     * Clears all messages.
+     */
+    public void clearMessages() {
+        messagePane.setText("");
     }
     
     public void clearLastMessages(int numLines) {
-        String text = messageArea.getText();
-        for (int i = 0; i < numLines; i++) {
-            int lastLineBreak = text.lastIndexOf("\n");
-            if (lastLineBreak != -1) {
-                text = text.substring(0, lastLineBreak);
-            } else {
-                text = ""; // Si es la última línea, limpiar todo
-                break;
-            }
-        }
-        messageArea.setText(text);
+        // Simplified approach: just clear all
+        clearMessages();
     }
-
-
     
     public int getMessageCount() {
-        return messageArea.getText().split("\n").length;
+        String[] lines = messagePane.getText().split("\n");
+        return lines.length;
     }
-
-
 }
