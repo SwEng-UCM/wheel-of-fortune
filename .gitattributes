@@ -1,0 +1,3 @@
+# Configuración de saltos de línea para archivos JSON y Java
+*.json text eol=lf
+*.java text eol=lf

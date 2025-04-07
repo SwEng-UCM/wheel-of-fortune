@@ -9,6 +9,8 @@ import ui.panels.UsedLettersPanel;
 import players.AutomaticPlayer;
 
 import java.awt.Color;
+import java.io.File;
+
 import javax.swing.*;
 import java.awt.*;
 
@@ -40,12 +42,52 @@ public class GameUI extends JFrame {
         super("Wheel of Fortune Game");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new BorderLayout(10, 10));
-        setSize(800, 500);
+        setSize(900, 600);
 
         this.game = Game.getInstance(this);
 
-        registerPlayers();
-        initGameState();
+        String[] options = {"Load saved game", "Create new game"};
+        int choice = JOptionPane.showOptionDialog(
+            this,
+            "Do you want to load a saved game or create a new one?",
+            "Load or New Game",
+            JOptionPane.YES_NO_OPTION,
+            JOptionPane.QUESTION_MESSAGE,
+            null,
+            options,
+            options[0]
+        );
+
+        boolean isLoaded = false;
+        if (choice == 0) {
+            JFileChooser fileChooser = new JFileChooser("saved_games");
+            fileChooser.setDialogTitle("Select a saved game to load");
+            fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+            int result = fileChooser.showOpenDialog(this);
+
+            if (result == JFileChooser.APPROVE_OPTION) {
+                File selectedFile = fileChooser.getSelectedFile();
+                String filename = selectedFile.getName();
+
+                if (filename.endsWith(".json")) {
+                    String saveName = filename.substring(0, filename.length() - 5);
+                    game.loadGameState(saveName, this);
+                    synchronizeRevealed();
+                    isLoaded = true;
+                } else {
+                    JOptionPane.showMessageDialog(this, "Invalid file. Starting a new game.");
+                    registerPlayers();
+                    initGameState();
+                }
+            } else {
+                JOptionPane.showMessageDialog(this, "No file selected. Starting a new game.");
+                registerPlayers();
+                initGameState();
+            }
+        } else {
+            registerPlayers();
+            initGameState();
+        }
 
         topPanel = new TopPanel(this);
         add(topPanel, BorderLayout.NORTH);
@@ -64,6 +106,8 @@ public class GameUI extends JFrame {
         setLocationRelativeTo(null);
         setVisible(true);
     }
+
+
 
     private void initGameState() {
         selectedPhrase = game.getRandomPhrase();
@@ -129,9 +173,9 @@ public class GameUI extends JFrame {
     }
  
     public void updateUIState() {
-        topPanel.updatePhraseLabel();
-        centerPanel.updateCurrentPlayer();
-        centerPanel.updateWallets();
+        if (topPanel != null) topPanel.updatePhraseLabel();
+        if (centerPanel != null) centerPanel.updateCurrentPlayer();
+        if (centerPanel != null) centerPanel.updateWallets();
         checkAutomaticTurn();
     }
 
@@ -304,92 +348,94 @@ public class GameUI extends JFrame {
         usedLettersPanel.addLetter(letter);
     }
 
-private void registerPlayers() {
-    int numPlayers = -1;
-    while (numPlayers < 2) {
-        String input = JOptionPane.showInputDialog(this, "Enter the number of players (minimum 2):");
-        try {
-            numPlayers = Integer.parseInt(input);
-            if (numPlayers < 2) {
-                JOptionPane.showMessageDialog(this, "You need at least 2 players!", "Error", JOptionPane.ERROR_MESSAGE);
-            }
-        } catch (NumberFormatException e) {
-            JOptionPane.showMessageDialog(this, "Invalid number. Try again.", "Error", JOptionPane.ERROR_MESSAGE);
-        }
-    }
-
-    for (int i = 0; i < numPlayers; i++) {
-        JPanel panel = new JPanel();
-        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
-
-        JPanel namePanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        namePanel.add(new JLabel("Enter name for Player " + (i + 1) + ":"));
-        JTextField nameField = new JTextField(20);
-        namePanel.add(nameField);
-        panel.add(namePanel);
-        
-        // Automatic player option panel
-        JPanel autoPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        autoPanel.add(new JLabel("Automatic player?"));
-        JCheckBox automaticCheckBox = new JCheckBox();
-        autoPanel.add(automaticCheckBox);
-        panel.add(autoPanel);
-
-        panel.add(Box.createVerticalStrut(10));
-        panel.add(new JLabel("Select your avatar:"));
-
-        JPanel avatarPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        ImageIcon[] avatars = new ImageIcon[] {
-            new ImageIcon(new ImageIcon(getClass().getResource("/avatar1.jpg")).getImage().getScaledInstance(50, 50, Image.SCALE_SMOOTH)),
-            new ImageIcon(new ImageIcon(getClass().getResource("/avatar2.jpg")).getImage().getScaledInstance(50, 50, Image.SCALE_SMOOTH)),
-            new ImageIcon(new ImageIcon(getClass().getResource("/avatar3.jpg")).getImage().getScaledInstance(50, 50, Image.SCALE_SMOOTH)),
-            new ImageIcon(new ImageIcon(getClass().getResource("/avatar4.jpg")).getImage().getScaledInstance(50, 50, Image.SCALE_SMOOTH)),
-            new ImageIcon(new ImageIcon(getClass().getResource("/avatar5.jpg")).getImage().getScaledInstance(50, 50, Image.SCALE_SMOOTH))
-        };
-
-        JToggleButton[] avatarButtons = new JToggleButton[avatars.length];
-        ButtonGroup avatarGroup = new ButtonGroup();
-        for (int j = 0; j < avatars.length; j++) {
-            avatarButtons[j] = new JToggleButton(avatars[j]);
-            avatarButtons[j].setPreferredSize(new Dimension(60, 60));
-            avatarGroup.add(avatarButtons[j]);
-            avatarPanel.add(avatarButtons[j]);
-        }
-        avatarButtons[0].setSelected(true);
-        panel.add(avatarPanel);
-
-        int result = JOptionPane.showConfirmDialog(this, panel, "Player Registration", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
-        if (result != JOptionPane.OK_OPTION) {
-            i--;
-            continue;
-        }
-
-        String playerName = nameField.getText().trim();
-        if (playerName.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Name cannot be empty.", "Error", JOptionPane.ERROR_MESSAGE);
-            i--;
-            continue;
-        }
-
-        int avatarChoice = 0;
-        for (int j = 0; j < avatarButtons.length; j++) {
-            if (avatarButtons[j].isSelected()) {
-                avatarChoice = j;
-                break;
+    private void registerPlayers() {
+        int numPlayers = -1;
+        while (numPlayers < 2) {
+            String input = JOptionPane.showInputDialog(this, "Enter the number of players (minimum 2):");
+            try {
+                numPlayers = Integer.parseInt(input);
+                if (numPlayers < 2) {
+                    JOptionPane.showMessageDialog(this, "You need at least 2 players!", "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            } catch (NumberFormatException e) {
+                JOptionPane.showMessageDialog(this, "Invalid number. Try again.", "Error", JOptionPane.ERROR_MESSAGE);
             }
         }
 
-        // Create an AutomaticPlayer if the checkbox is selected, else a normal Player.
-        Player player;
-        if (automaticCheckBox.isSelected()) {
-            player = new AutomaticPlayer(playerName);
-        } else {
-            player = new Player(playerName);
+        for (int i = 0; i < numPlayers; i++) {
+            JPanel panel = new JPanel();
+            panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+
+            JPanel namePanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+            namePanel.add(new JLabel("Enter name for Player " + (i + 1) + ":"));
+            JTextField nameField = new JTextField(20);
+            namePanel.add(nameField);
+            panel.add(namePanel);
+
+            JPanel autoPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+            autoPanel.add(new JLabel("Automatic player?"));
+            JCheckBox automaticCheckBox = new JCheckBox();
+            autoPanel.add(automaticCheckBox);
+            panel.add(autoPanel);
+
+            panel.add(Box.createVerticalStrut(10));
+            panel.add(new JLabel("Select your avatar:"));
+
+            String[] avatarFileNames = {
+                "avatar1.jpg", "avatar2.jpg", "avatar3.jpg", "avatar4.jpg", "avatar5.jpg"
+            };
+
+            JPanel avatarPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+            ImageIcon[] avatars = new ImageIcon[] {
+                new ImageIcon(new ImageIcon(getClass().getResource("/avatar1.jpg")).getImage().getScaledInstance(50, 50, Image.SCALE_SMOOTH)),
+                new ImageIcon(new ImageIcon(getClass().getResource("/avatar2.jpg")).getImage().getScaledInstance(50, 50, Image.SCALE_SMOOTH)),
+                new ImageIcon(new ImageIcon(getClass().getResource("/avatar3.jpg")).getImage().getScaledInstance(50, 50, Image.SCALE_SMOOTH)),
+                new ImageIcon(new ImageIcon(getClass().getResource("/avatar4.jpg")).getImage().getScaledInstance(50, 50, Image.SCALE_SMOOTH)),
+                new ImageIcon(new ImageIcon(getClass().getResource("/avatar5.jpg")).getImage().getScaledInstance(50, 50, Image.SCALE_SMOOTH))
+            };
+
+            JToggleButton[] avatarButtons = new JToggleButton[avatars.length];
+            ButtonGroup avatarGroup = new ButtonGroup();
+            for (int j = 0; j < avatars.length; j++) {
+                avatarButtons[j] = new JToggleButton(avatars[j]);
+                avatarButtons[j].setPreferredSize(new Dimension(60, 60));
+                avatarGroup.add(avatarButtons[j]);
+                avatarPanel.add(avatarButtons[j]);
+            }
+            avatarButtons[0].setSelected(true);
+            panel.add(avatarPanel);
+
+            int result = JOptionPane.showConfirmDialog(this, panel, "Player Registration", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+            if (result != JOptionPane.OK_OPTION) {
+                i--;
+                continue;
+            }
+
+            String playerName = nameField.getText().trim();
+            if (playerName.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Name cannot be empty.", "Error", JOptionPane.ERROR_MESSAGE);
+                i--;
+                continue;
+            }
+
+            int avatarChoice = 0;
+            for (int j = 0; j < avatarButtons.length; j++) {
+                if (avatarButtons[j].isSelected()) {
+                    avatarChoice = j;
+                    break;
+                }
+            }
+
+            Player player;
+            if (automaticCheckBox.isSelected()) {
+                player = new AutomaticPlayer(playerName);
+            } else {
+                player = new Player(playerName);
+            }
+            player.setAvatar(avatars[avatarChoice], avatarFileNames[avatarChoice]);
+            game.addPlayer(player);
         }
-        player.setAvatar(avatars[avatarChoice]);
-        game.addPlayer(player);
     }
-}
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(GameUI::new);

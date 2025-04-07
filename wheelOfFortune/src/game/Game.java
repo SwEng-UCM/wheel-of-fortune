@@ -1,23 +1,20 @@
 package game;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import model.state.GameState;
+import model.state.PlayerState;
 import players.Player;
 import ui.Console;
 import ui.EndScreen;
 import ui.GameUI;
 import utils.InputHelper;
 
-import javax.swing.JFrame;
-import javax.swing.SwingUtilities;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
+import javax.swing.*;
+import java.io.*;
+import java.util.*;
 
 public class Game {
-    // Singleton: single instance
     private static volatile Game instance;
 
     private List<Player> players;
@@ -25,15 +22,14 @@ public class Game {
     private List<String> phrases;
     private List<String> slices;
     private Player currentPlayer;
+    private List<Character> usedLetters = new ArrayList<>();
 
-    // NEW: Field to store the puzzle phrase
     private String phrase;
     private char[] revealed;
     private boolean isGameOver;
     private JFrame gameWindow;
     private boolean hasSpun;
 
-    // Private constructor for the singleton
     private Game(JFrame gameWindow) {
         this.gameWindow = gameWindow;
         players = new ArrayList<>();
@@ -44,7 +40,6 @@ public class Game {
         loadSlices("slices.txt");
     }
 
-    // Singleton accessor
     public static Game getInstance(JFrame gameWindow) {
         if (instance == null) {
             synchronized (Game.class) {
@@ -93,17 +88,11 @@ public class Game {
             Console.showMessage("❌ Error loading slices: " + e.getMessage());
         }
     }
-    /**
-     * Sets the puzzle phrase so that getSelectedPhrase() won't return null.
-     * @param puzzle The phrase chosen by the UI or logic.
-     */
+
     public void setPhrase(String puzzle) {
         this.phrase = puzzle;
     }
 
-    /**
-     * Returns the currently selected puzzle phrase.
-     */
     public String getSelectedPhrase() {
         return phrase;
     }
@@ -123,10 +112,10 @@ public class Game {
             return;
         }
 
-        // Store the puzzle in the 'phrase' field
         this.phrase = getRandomPhrase();
 
         revealed = new char[phrase.length()];
+        usedLetters.clear();
         for (int i = 0; i < phrase.length(); i++) {
             revealed[i] = (phrase.charAt(i) == ' ') ? ' ' : '_';
         }
@@ -134,7 +123,6 @@ public class Game {
         while (!isPhraseComplete(revealed)) {
             displayPanel(revealed);
             assignTurn();
-            
 
             InputHelper.getText("\nPress Enter to spin the wheel...");
             String sliceResult = randomSlice();
@@ -149,6 +137,9 @@ public class Game {
                 continue;
             }
             char guessedLetter = Character.toUpperCase(guess.charAt(0));
+            if (!usedLetters.contains(guessedLetter)) {
+                usedLetters.add(guessedLetter);
+            }
             boolean correctGuess = false;
 
             for (int i = 0; i < phrase.length(); i++) {
@@ -196,9 +187,8 @@ public class Game {
             isGameOver = true;
             Player winner = players.get(currentPlayerIndex);
 
-            // Now we can call EndScreen with the final phrase
             SwingUtilities.invokeLater(() ->
-                new EndScreen(winner, this, getSelectedPhrase()).setVisible(true)
+                    new EndScreen(winner, this, getSelectedPhrase()).setVisible(true)
             );
         }
     }
@@ -269,21 +259,19 @@ public class Game {
     }
 
     public void restartGame() {
-        // Reset game data
         players.clear();
         currentPlayerIndex = 0;
         isGameOver = false;
         hasSpun = false;
+        usedLetters.clear();
 
-        // Close the previous window if it exists
         if (gameWindow != null) {
             gameWindow.dispose();
         }
 
-        // Create a new UI instance
         SwingUtilities.invokeLater(() -> {
             GameUI newGameUI = new GameUI();
-            setGameWindow(newGameUI); // Save reference to the new window
+            setGameWindow(newGameUI);
         });
     }
 
@@ -302,4 +290,69 @@ public class Game {
     public void setCurrentPlayerIndex(int index) {
         this.currentPlayerIndex = index;
     }
+
+    public GameState createGameState() {
+        List<PlayerState> playerStates = new ArrayList<>();
+        for (Player player : players) {
+            playerStates.add(new PlayerState(player.getName(), player.getAvatarKey(), player.getMoney()));
+        }
+        List<Character> revealedList = new ArrayList<>();
+        for (char c : revealed) {
+            revealedList.add(c);
+        }
+        return new GameState(playerStates, phrase, revealedList, usedLetters, currentPlayerIndex);
+    }
+
+    public void applyGameState(GameState state) {
+        List<Player> loadedPlayers = new ArrayList<>();
+        for (PlayerState ps : state.getPlayers()) {
+            loadedPlayers.add(new Player(ps.getName(), ps.getAvatar(), ps.getMoney()));
+        }
+        this.players = loadedPlayers;
+        this.phrase = state.getWordToGuess();
+        List<Character> loadedRevealed = state.getRevealedLetters();
+        this.revealed = new char[loadedRevealed.size()];
+        for (int i = 0; i < loadedRevealed.size(); i++) {
+            this.revealed[i] = loadedRevealed.get(i);
+        }
+        this.usedLetters = state.getUsedLetters();
+        this.currentPlayerIndex = state.getCurrentPlayerIndex();
+    }
+
+    public void saveGameState(String name) {
+        GameState state = createGameState();
+        Gson gson = new GsonBuilder().setPrettyPrinting().create();
+
+        File dir = new File("saved_games");
+        if (!dir.exists()) {
+            dir.mkdir();
+        }
+
+        try (FileWriter writer = new FileWriter("saved_games/" + name + ".json")) {
+            gson.toJson(state, writer);
+            JOptionPane.showMessageDialog(null, "✅ Game saved as '" + name + ".json'.");
+        } catch (IOException e) {
+            JOptionPane.showMessageDialog(null, "❌ Failed to save game: " + e.getMessage());
+        }
+    }
+
+    public void loadGameState(String name, GameUI gameUI) {
+        Gson gson = new Gson();
+
+        File file = new File("saved_games/" + name + ".json");
+        if (!file.exists()) {
+            JOptionPane.showMessageDialog(null, "❌ Save file '" + name + ".json' does not exist.");
+            return;
+        }
+
+        try (FileReader reader = new FileReader(file)) {
+            GameState state = gson.fromJson(reader, GameState.class);
+            applyGameState(state);
+            gameUI.synchronizeRevealed();
+            JOptionPane.showMessageDialog(null, "📂 Game '" + name + ".json' loaded successfully.");
+        } catch (IOException e) {
+            JOptionPane.showMessageDialog(null, "❌ Failed to load game: " + e.getMessage());
+        }
+    }
+
 }

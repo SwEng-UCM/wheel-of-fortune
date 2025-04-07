@@ -5,14 +5,23 @@ import javax.swing.ImageIcon;
 public class Player {
     private String name;
     private int score;
-    private int money; // Nueva variable para almacenar el dinero ganado
-    private ImageIcon avatar; // Nuevo atributo para almacenar el avatar
+    private int money;
+    private ImageIcon avatar;
+    private String avatarFileName; // ← NUEVO
 
     public Player(String name) {
         this.name = name;
         this.score = 0;
-        this.money = 0; // Inicialmente, el dinero es 0
-        
+        this.money = 0;
+    }
+
+    // NUEVO: Constructor usado al cargar partida
+    public Player(String name, String avatarFileName, int money) {
+        this.name = name;
+        this.avatarFileName = avatarFileName;
+        this.avatar = new ImageIcon("resources/" + avatarFileName);
+        this.money = money;
+        this.score = 0;
     }
 
     public String getName() {
@@ -34,17 +43,23 @@ public class Player {
     public void addMoney(int amount) {
         this.money += amount;
     }
-    
+
     public int getBudget() {
         return money;
     }
 
-    // Agrega los métodos getter y setter para el avatar:
     public ImageIcon getAvatar() {
         return avatar;
     }
 
-    public void setAvatar(ImageIcon avatar) {
+    // MODIFICADO
+    public void setAvatar(ImageIcon avatar, String avatarFileName) {
         this.avatar = avatar;
+        this.avatarFileName = avatarFileName;
+    }
+
+    // NUEVO
+    public String getAvatarKey() {
+        return avatarFileName;
     }
 }

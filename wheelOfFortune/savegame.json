@@ -1,0 +1,23 @@
+{
+  "players": [
+    {
+      "name": "g",
+      "avatarFileName": "avatar2.jpg",
+      "money": 1000
+    },
+    {
+      "name": "x",
+      "avatarFileName": "avatar4.jpg",
+      "money": 0
+    }
+  ],
+  "wordToGuess": "Hola",
+  "revealedLetters": [
+    "H",
+    "_",
+    "_",
+    "_"
+  ],
+  "usedLetters": [],
+  "currentPlayerIndex": 0
+}

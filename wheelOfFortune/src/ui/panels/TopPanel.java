@@ -4,9 +4,11 @@ import ui.GameUI;
 
 import javax.swing.*;
 import java.awt.*;
+import java.io.File;
+
+import game.Game;
 
 public class TopPanel extends JPanel {
-    // Tamaño del banner
     private static final int BANNER_WIDTH = 400;
     private static final int BANNER_HEIGHT = 80;
 
@@ -16,53 +18,86 @@ public class TopPanel extends JPanel {
     public TopPanel(GameUI gameUI) {
         this.gameUI = gameUI;
 
-        // Fijamos un layout
         setLayout(new BorderLayout());
-
-        // -- COLOR DE FONDO BLANCO --
         setBackground(Color.WHITE);
         setOpaque(true);
 
-        // --- 1. Banner reducido ---
+        // Banner
         ImageIcon originalIcon = new ImageIcon(getClass().getResource("/TopPanel.png"));
         Image originalImage = originalIcon.getImage();
-
         Image scaledImage = originalImage.getScaledInstance(BANNER_WIDTH, BANNER_HEIGHT, Image.SCALE_SMOOTH);
         ImageIcon scaledIcon = new ImageIcon(scaledImage);
 
         JLabel bannerLabel = new JLabel(scaledIcon);
         bannerLabel.setPreferredSize(new Dimension(BANNER_WIDTH, BANNER_HEIGHT));
         bannerLabel.setHorizontalAlignment(SwingConstants.CENTER);
-
-        // Si quieres que el label muestre el fondo blanco en lugar de gris, hazlo opaco
         bannerLabel.setBackground(Color.WHITE);
         bannerLabel.setOpaque(true);
-
-        // Añadimos el banner en la parte superior
         add(bannerLabel, BorderLayout.NORTH);
 
-        // --- 2. Panel para la frase ---
+        // Phrase panel
         JPanel phrasePanel = new JPanel(new BorderLayout());
-        // También lo ponemos en blanco
         phrasePanel.setBackground(Color.WHITE);
         phrasePanel.setOpaque(true);
 
         phraseLabel = new JLabel("", SwingConstants.CENTER);
         phraseLabel.setFont(new Font("Monospaced", Font.BOLD, 18));
-        phraseLabel.setForeground(Color.BLACK);  // Ajusta según tu gusto
-        // No es obligatorio hacerlo opaco si el fondo ya es blanco:
+        phraseLabel.setForeground(Color.BLACK);
         phraseLabel.setOpaque(false);
 
         phrasePanel.add(phraseLabel, BorderLayout.CENTER);
         add(phrasePanel, BorderLayout.CENTER);
 
-        // Mostramos la frase inicial
+        // Buttons panel
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        buttonPanel.setBackground(Color.WHITE);
+
+        JButton saveButton = new JButton("💾 Save");
+        JButton loadButton = new JButton("📂 Load");
+        JButton exitButton = new JButton("❌ Exit");
+
+        // Save action
+        saveButton.addActionListener(e -> {
+            String saveName = JOptionPane.showInputDialog(this, "Enter a name for the saved game:");
+            if (saveName != null && !saveName.trim().isEmpty()) {
+                gameUI.getGame().saveGameState(saveName.trim());
+            }
+        });
+
+        // Load action
+        loadButton.addActionListener(e -> {
+            JFileChooser fileChooser = new JFileChooser("saved_games");
+            fileChooser.setDialogTitle("Select a saved game to load");
+            fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+
+            int result = fileChooser.showOpenDialog(this);
+            if (result == JFileChooser.APPROVE_OPTION) {
+                File selectedFile = fileChooser.getSelectedFile();
+                String filename = selectedFile.getName();
+
+                if (filename.endsWith(".json")) {
+                    String saveName = filename.substring(0, filename.length() - 5); // remove ".json"
+                    gameUI.getGame().loadGameState(saveName, gameUI);
+                    gameUI.updateUIState();
+                } else {
+                    JOptionPane.showMessageDialog(this, "Invalid file. Please select a .json saved game file.");
+                }
+            }
+        });
+
+
+        // Exit action
+        exitButton.addActionListener(e -> System.exit(0));
+
+        buttonPanel.add(saveButton);
+        buttonPanel.add(loadButton);
+        buttonPanel.add(exitButton);
+
+        add(buttonPanel, BorderLayout.SOUTH);
+
         updatePhraseLabel();
     }
 
-    /**
-     * Actualiza la etiqueta que muestra la frase (con '_' o letras descubiertas).
-     */
     public void updatePhraseLabel() {
         char[] revealed = gameUI.getRevealed();
         StringBuilder sb = new StringBuilder("<html><body style='width:600px; text-align:center; font-family:monospace;'>");
