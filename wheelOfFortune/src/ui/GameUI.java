@@ -24,6 +24,8 @@ public class GameUI extends JFrame {
     private boolean gameOver;
     private int currentSpinValue;
     private boolean isX2Active = false;
+    private boolean hasExtraTurn = false;
+
 
     // Paneles
     private TopPanel topPanel;
@@ -212,6 +214,11 @@ public class GameUI extends JFrame {
                     spinWheel();
                     return;
                 }
+                if (sliceResult.equalsIgnoreCase("Extra Turn")) {
+                    bottomPanel.appendMessage("🔄 You landed on EXTRA TURN! You won't lose your turn even if you guess wrong.", ColorPalette.INFO);
+                    hasExtraTurn = true;
+                }
+
 
                 hasSpun = true;
             } catch (Exception ex) {
@@ -269,8 +276,16 @@ public class GameUI extends JFrame {
         } else {
             bottomPanel.appendMessage("✖ Letter '" + guessedLetter + "' is not in the phrase. Next player!", ColorPalette.ERROR);
             isX2Active = false;
-            game.nextTurn();
+
+            if (hasExtraTurn) {
+                bottomPanel.appendMessage("🛡️ EXTRA TURN active! You keep your turn.", ColorPalette.INFO);
+                hasExtraTurn = false; // solo dura una ronda
+            } else {
+                game.nextTurn();
+            }
+
             updateUIState();
+
         }
 
         hasSpun = false;
@@ -486,6 +501,15 @@ public class GameUI extends JFrame {
             // Prevent instantiation.
         }
     }
+    
+    public boolean hasExtraTurn() {
+        return hasExtraTurn;
+    }
+
+    public void setExtraTurn(boolean extraTurn) {
+        this.hasExtraTurn = extraTurn;
+    }
+
 
 
 }
