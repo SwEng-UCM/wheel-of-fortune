@@ -61,8 +61,22 @@ public class BottomPanel extends JPanel {
     }
     
     public void clearLastMessages(int numLines) {
-        // Simplified approach: just clear all
-        clearMessages();
+        String fullText = messagePane.getText();
+        String[] lines = fullText.split("\n");
+
+        if (numLines >= lines.length) {
+            // Si hay menos líneas que las que queremos borrar, lo limpiamos todo
+            clearMessages();
+            return;
+        }
+
+        // Construir nuevo texto sin las últimas `numLines`
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < lines.length - numLines; i++) {
+            sb.append(lines[i]).append("\n");
+        }
+
+        messagePane.setText(sb.toString());
     }
     
     public int getMessageCount() {

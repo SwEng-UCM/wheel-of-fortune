@@ -194,18 +194,17 @@ public class CenterPanel extends JPanel {
     }
 
     public void updateCurrentPlayer() {
-        // Get the current player from the game.
         Player currentPlayer = gameUI.getGame().getPlayers().get(gameUI.getGame().getCurrentPlayerIndex());
         String displayName = currentPlayer.getName();
         if (currentPlayer instanceof players.AutomaticPlayer) {
             displayName = "Automatic: " + displayName;
         }
         currentPlayerLabel.setText("Turn: " + displayName);
-        // Set the label to use a bold, 20pt font, black text, with no background.
         currentPlayerLabel.setFont(new Font("Arial", Font.BOLD | Font.ITALIC, 18));
         currentPlayerLabel.setForeground(new Color(34, 34, 34));
-        currentPlayerLabel.setOpaque(false); // Makes background transparent.
+        currentPlayerLabel.setOpaque(false);
         currentPlayerLabel.setHorizontalAlignment(SwingConstants.CENTER);
+
     }
 
     public void updateWallets() {

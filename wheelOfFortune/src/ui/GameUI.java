@@ -455,7 +455,6 @@ public class GameUI extends JFrame {
 
         // 4. Actualizar visualmente el juego.
         updateUIState();
-        bottomPanel.appendMessage("↩️ Undo performed: Letter '" + letterToUndo + "' removed.");
     }
     public void synchronizeRevealed() {
         this.revealed = game.getRevealed().clone();
