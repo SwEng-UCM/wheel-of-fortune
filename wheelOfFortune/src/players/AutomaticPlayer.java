@@ -4,36 +4,44 @@ import ui.GameUI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import players.EasyAIStrategy;
+import players.AutomaticPlayerStrategy;
 
 public class AutomaticPlayer extends Player {
     private Random random;
+    private AutomaticPlayerStrategy strategy;
 
     public AutomaticPlayer(String name) {
         super(name);
         this.random = new Random();
+        // Set a default strategy (Easy) when the player is created.
+        this.strategy = new EasyAIStrategy();
+    }
+    /**
+     * Sets the AI strategy for this automatic player.
+     * This method lets you change the AI difficulty at runtime.
+     *
+     * @param strategy The new strategy to use.
+     */
+    public void setStrategy(AutomaticPlayerStrategy strategy) {
+        this.strategy = strategy;
     }
     
     /**
-     * Automatically plays a turn using the GUI.
-     * It spins the wheel and then automatically picks an available consonant.
+     * Takes a turn by delegating to the current AI strategy.
+     * This uses the Strategy pattern: 
+     * the algorithm for taking a turn is encapsulated in a separate strategy object.
      *
-     * @param ui the current GameUI instance.
+     * @param ui The current GameUI instance.
      */
     public void takeTurn(GameUI ui) {
-        // Display message in the bottom panel indicating the automatic turn.
-        ui.getBottomPanel().appendMessage(getName() + " (Automatic) is taking a turn...");
-        
-        // Simulate spinning the wheel.
-        ui.spinWheel();
-        
-        // Choose a letter automatically.
-        char guess = chooseLetter(ui);
-        ui.getBottomPanel().appendMessage(getName() + " automatically guesses the letter: " + guess);
-        
-        // Process the guess.
-        ui.guessLetter(String.valueOf(guess));
+        if (strategy != null) {
+            strategy.performTurn(ui, this);
+        } else {
+            // Fallback: if no strategy is set, show an error (should not happen).
+            ui.getBottomPanel().appendMessage(getName() + " (Automatic) is taking a turn... (No strategy set)", java.awt.Color.RED);
+        }
     }
-    
     /**
      * Chooses a random consonant that has not been used yet.
      *
@@ -57,5 +65,6 @@ public class AutomaticPlayer extends Player {
         }
         return available.get(random.nextInt(available.size()));
     }
+    
 }
 

@@ -47,6 +47,31 @@ public class GameUI extends JFrame {
         setSize(900, 600);
 
         this.game = Game.getInstance(this);
+        
+     // --- Add a custom-styled menu bar with a settings menu ---
+        JMenuBar menuBar = new JMenuBar();
+        menuBar.setBackground(Color.WHITE);  // SteelBlue: a medium–dark blue
+        menuBar.setForeground(Color.WHITE);
+
+        // Create the Settings menu and add a gear icon.
+        JMenu settingsMenu = new JMenu("Settings");
+        settingsMenu.setFont(new Font("Arial", Font.BOLD, 14));
+        settingsMenu.setForeground(Color.WHITE);
+        settingsMenu.setOpaque(true);
+        settingsMenu.setBackground(new Color(70, 130, 180));
+
+        // Create the AI Difficulty menu item.
+        JMenuItem aiSettingsItem = new JMenuItem("AI Difficulty");
+        aiSettingsItem.setFont(new Font("Arial", Font.BOLD, 14));
+        aiSettingsItem.setBackground(new Color(100, 149, 237));  // CornflowerBlue for a lighter blue effect
+        aiSettingsItem.setForeground(Color.WHITE);
+        aiSettingsItem.addActionListener(e -> showAIStrategySelection());
+
+        // Add the menu item to the Settings menu, then add the menu to the menu bar.
+        settingsMenu.add(aiSettingsItem);
+        menuBar.add(settingsMenu);
+        setJMenuBar(menuBar);
+
 
         String[] options = {"Load saved game", "Create new game"};
         int choice = JOptionPane.showOptionDialog(
@@ -510,6 +535,42 @@ public class GameUI extends JFrame {
         this.hasExtraTurn = extraTurn;
     }
 
+    public void showAIStrategySelection() {
+        String[] options = {"Easy", "Medium", "Hard"};
+        int choice = JOptionPane.showOptionDialog(
+                this,
+                "Select AI Difficulty",
+                "AI Settings",
+                JOptionPane.DEFAULT_OPTION,
+                JOptionPane.QUESTION_MESSAGE,
+                null,
+                options,
+                options[0]
+        );
+
+        // Create a new strategy based on the user's choice.
+        players.AutomaticPlayerStrategy newStrategy;
+        switch (choice) {
+            case 1:
+                newStrategy = new players.MediumAIStrategy();
+                break;
+            case 2:
+                newStrategy = new players.HardAIStrategy();
+                break;
+            case 0:
+            default:
+                newStrategy = new players.EasyAIStrategy();
+                break;
+        }
+
+        // Update each automatic player with the new strategy.
+        for (Player p : game.getPlayers()) {
+            if (p instanceof players.AutomaticPlayer) {
+                ((players.AutomaticPlayer) p).setStrategy(newStrategy);
+            }
+        }
+        bottomPanel.appendMessage("AI difficulty set to: " + options[choice], ColorPalette.INFO);
+    }
 
 
 }
