@@ -338,8 +338,8 @@ public class Game {
 
     public void loadGameState(String name, GameUI gameUI) {
         Gson gson = new Gson();
-
         File file = new File("saved_games/" + name + ".json");
+
         if (!file.exists()) {
             JOptionPane.showMessageDialog(null, "❌ Save file '" + name + ".json' does not exist.");
             return;
@@ -349,10 +349,20 @@ public class Game {
             GameState state = gson.fromJson(reader, GameState.class);
             applyGameState(state);
             gameUI.synchronizeRevealed();
+            gameUI.synchronizeUsedLetters(state.getUsedLetters()); // ← AÑADIR ESTO
             JOptionPane.showMessageDialog(null, "📂 Game '" + name + ".json' loaded successfully.");
         } catch (IOException e) {
             JOptionPane.showMessageDialog(null, "❌ Failed to load game: " + e.getMessage());
         }
     }
+    
+    public void addUsedLetter(char letter) {
+        letter = Character.toUpperCase(letter);
+        if (!usedLetters.contains(letter)) {
+            usedLetters.add(letter);
+        }
+    }
+
+
 
 }

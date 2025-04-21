@@ -82,6 +82,12 @@ public class UsedLettersPanel extends JPanel {
         usedLetters.remove(Character.toUpperCase(letter));
         updateDisplay();
     }
+    
+    public void clearLetters() {
+        usedLetters.clear();
+        updateDisplay();
+    }
+
 
 }
 

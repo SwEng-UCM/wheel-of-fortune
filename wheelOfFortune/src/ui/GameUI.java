@@ -14,6 +14,9 @@ import java.io.File;
 import javax.swing.*;
 import java.awt.*;
 
+import java.util.List;
+
+
 public class GameUI extends JFrame {
     private Game game;
 
@@ -147,6 +150,14 @@ public class GameUI extends JFrame {
         gameOver = false;
         currentSpinValue = 0;
     }
+    
+    public void synchronizeUsedLetters(List<Character> usedLetters) {
+        usedLettersPanel.clearLetters();
+        for (Character c : usedLetters) {
+            usedLettersPanel.addLetter(c);
+        }
+    }
+
 
     public Game getGame() {
         return game;
@@ -262,7 +273,10 @@ public class GameUI extends JFrame {
             return false;
         }
 
-        usedLettersPanel.addLetter(Character.toUpperCase(guessedLetter));
+        char upperLetter = Character.toUpperCase(guessedLetter);
+        usedLettersPanel.addLetter(upperLetter);
+        game.addUsedLetter(upperLetter);  // <--- esta es la clave
+
 
         if ("AEIOU".indexOf(guessedLetter) != -1) {
             bottomPanel.appendMessage("❌ You can only guess consonants in your turn! Try again.", ColorPalette.ERROR);
@@ -571,6 +585,9 @@ public class GameUI extends JFrame {
         }
         bottomPanel.appendMessage("AI difficulty set to: " + options[choice], ColorPalette.INFO);
     }
+    
+   
+
 
 
 }
