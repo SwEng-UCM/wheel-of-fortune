@@ -2,6 +2,10 @@ package game;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+
+import model.memento.GameCaretaker;
+import model.memento.GameOriginator;
+import model.memento.GameStateMemento;
 import model.state.GameState;
 import model.state.PlayerState;
 import players.Player;
@@ -16,6 +20,8 @@ import java.util.*;
 
 public class Game {
     private static volatile Game instance;
+    
+    private final GameOriginator originator = new GameOriginator();
 
     private List<Player> players;
     private int currentPlayerIndex;
@@ -320,40 +326,39 @@ public class Game {
     }
 
     public void saveGameState(String name) {
-        GameState state = createGameState();
-        Gson gson = new GsonBuilder().setPrettyPrinting().create();
+        // 1) Capturo el estado actual
+        originator.setState(createGameState());
+        GameStateMemento memento = originator.saveToMemento();
 
+        // 2) Creo carpeta si no existe
         File dir = new File("saved_games");
-        if (!dir.exists()) {
-            dir.mkdir();
-        }
+        if (!dir.exists()) dir.mkdir();
 
-        try (FileWriter writer = new FileWriter("saved_games/" + name + ".json")) {
-            gson.toJson(state, writer);
-            JOptionPane.showMessageDialog(null, "✅ Game saved as '" + name + ".json'.");
-        } catch (IOException e) {
-            JOptionPane.showMessageDialog(null, "❌ Failed to save game: " + e.getMessage());
-        }
+        // 3) Guardo usando GameCaretaker parametrizado
+        String path = "saved_games/" + name + ".json";
+        GameCaretaker caretaker = new GameCaretaker(path);
+        caretaker.save(memento);
+
+        JOptionPane.showMessageDialog(null, "✅ Game saved as '" + name + ".json'.");
     }
 
     public void loadGameState(String name, GameUI gameUI) {
-        Gson gson = new Gson();
-        File file = new File("saved_games/" + name + ".json");
-
-        if (!file.exists()) {
+        String path = "saved_games/" + name + ".json";
+        GameCaretaker caretaker = new GameCaretaker(path);
+        GameStateMemento memento = caretaker.load();
+        if (memento == null) {
             JOptionPane.showMessageDialog(null, "❌ Save file '" + name + ".json' does not exist.");
             return;
         }
 
-        try (FileReader reader = new FileReader(file)) {
-            GameState state = gson.fromJson(reader, GameState.class);
-            applyGameState(state);
-            gameUI.synchronizeRevealed();
-            gameUI.synchronizeUsedLetters(state.getUsedLetters()); // ← AÑADIR ESTO
-            JOptionPane.showMessageDialog(null, "📂 Game '" + name + ".json' loaded successfully.");
-        } catch (IOException e) {
-            JOptionPane.showMessageDialog(null, "❌ Failed to load game: " + e.getMessage());
-        }
+        // 4) Restaura el estado desde el memento
+        originator.restoreFromMemento(memento);
+        applyGameState(originator.getCurrentState());
+
+        // 5) Sincroniza UI
+        gameUI.synchronizeRevealed();
+        gameUI.synchronizeUsedLetters(originator.getCurrentState().getUsedLetters());
+        JOptionPane.showMessageDialog(null, "📂 Game '" + name + ".json' loaded successfully.");
     }
     
     public void addUsedLetter(char letter) {
