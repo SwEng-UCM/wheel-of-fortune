@@ -107,6 +107,8 @@ public class GameUI extends JFrame {
                 	System.out.println("[GameUI] Archivo seleccionado para cargar: " + filename);
                     String saveName = filename.substring(0, filename.length() - 5);
                     game.loadGameState(saveName, this);
+                    this.selectedPhrase = game.getSelectedPhrase();
+                    this.revealed = game.getRevealed().clone();
                     synchronizeRevealed();
                     isLoaded = true;
                     System.out.println("[GameUI] Partida cargada. Jugadores:");
