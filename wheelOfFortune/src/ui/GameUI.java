@@ -48,8 +48,12 @@ public class GameUI extends JFrame {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new BorderLayout(10, 10));
         setSize(900, 600);
+        
+        System.out.println("[GameUI] Inicializando GameUI...");
 
         this.game = Game.getInstance(this);
+        
+        usedLettersPanel = new UsedLettersPanel();
         
      // --- Add a custom-styled menu bar with a settings menu ---
         JMenuBar menuBar = new JMenuBar();
@@ -100,21 +104,26 @@ public class GameUI extends JFrame {
                 String filename = selectedFile.getName();
 
                 if (filename.endsWith(".json")) {
+                	System.out.println("[GameUI] Archivo seleccionado para cargar: " + filename);
                     String saveName = filename.substring(0, filename.length() - 5);
                     game.loadGameState(saveName, this);
                     synchronizeRevealed();
                     isLoaded = true;
+                    System.out.println("[GameUI] Partida cargada. Jugadores:");
                 } else {
+                	System.out.println("[GameUI] Archivo no válido. Creando nueva partida.");
                     JOptionPane.showMessageDialog(this, "Invalid file. Starting a new game.");
                     registerPlayers();
                     initGameState();
                 }
             } else {
+            	System.out.println("[GameUI] No se seleccionó archivo. Creando nueva partida.");
                 JOptionPane.showMessageDialog(this, "No file selected. Starting a new game.");
                 registerPlayers();
                 initGameState();
             }
         } else {
+        	System.out.println("[GameUI] Se eligió crear nueva partida.");
             registerPlayers();
             initGameState();
         }
@@ -126,7 +135,7 @@ public class GameUI extends JFrame {
         add(centerPanel, BorderLayout.CENTER);
 
         bottomPanel = new BottomPanel(this);
-        usedLettersPanel = new UsedLettersPanel();
+       
         JPanel southContainer = new JPanel(new BorderLayout());
         southContainer.add(bottomPanel, BorderLayout.CENTER);
         southContainer.add(usedLettersPanel, BorderLayout.SOUTH);
@@ -140,6 +149,7 @@ public class GameUI extends JFrame {
 
 
     private void initGameState() {
+    	System.out.println("[GameUI] Inicializando estado del juego...");
         selectedPhrase = game.getRandomPhrase();
         game.setPhrase(selectedPhrase);
         revealed = new char[selectedPhrase.length()];
@@ -211,6 +221,7 @@ public class GameUI extends JFrame {
     }
  
     public void updateUIState() {
+    	System.out.println("[GameUI] Actualizando UI state...");
         if (topPanel != null) topPanel.updatePhraseLabel();
         if (centerPanel != null) centerPanel.updateCurrentPlayer();
         if (centerPanel != null) centerPanel.updateWallets();
@@ -403,6 +414,7 @@ public class GameUI extends JFrame {
     }
 
     private void registerPlayers() {
+    	System.out.println("[GameUI] Registrando jugadores...");
         int numPlayers = -1;
         while (numPlayers < 2) {
             String input = JOptionPane.showInputDialog(this, "Enter the number of players (minimum 2):");

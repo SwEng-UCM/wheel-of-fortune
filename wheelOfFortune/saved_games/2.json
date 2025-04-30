@@ -1,0 +1,30 @@
+{
+  "players": [
+    {
+      "name": "a",
+      "avatarFileName": "avatar1.jpg",
+      "money": 1000
+    },
+    {
+      "name": "b",
+      "avatarFileName": "avatar4.jpg",
+      "money": 0
+    }
+  ],
+  "wordToGuess": "Job",
+  "revealedLetters": [
+    "_",
+    "_",
+    "b"
+  ],
+  "usedLetters": [
+    "Z",
+    "X",
+    "C",
+    "V",
+    "B",
+    "N",
+    "M"
+  ],
+  "currentPlayerIndex": 1
+}
