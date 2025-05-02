@@ -62,4 +62,9 @@ public class Player {
     public String getAvatarKey() {
         return avatarFileName;
     }
+    
+    public java.awt.Image getAvatarImage() {
+        return avatar != null ? avatar.getImage() : null;
+    }
+
 }

@@ -31,6 +31,11 @@ public class BuyVowelCommand implements Command {
 
         // Comprar la vocal
         gameUI.buyVowel(String.valueOf(vowel));
+        gameUI.refreshPlayerCards();
+        if (GameUI.serverInstance != null) {
+            GameUI.serverInstance.broadcastGameState(gameUI.getGame());
+        }
+
 
         int finalMessageCount = gameUI.getBottomPanel().getMessageCount();
         messageCount = finalMessageCount - initialMessageCount;
@@ -48,6 +53,12 @@ public class BuyVowelCommand implements Command {
         gameUI.getUsedLettersPanel().removeLetter(vowel);
 
         clearAllMessages(gameUI, messageCount);
+        
+        gameUI.refreshPlayerCards();
+        if (GameUI.serverInstance != null) {
+            GameUI.serverInstance.broadcastGameState(gameUI.getGame());
+        }
+
         gameUI.updateUIState();
     }
 

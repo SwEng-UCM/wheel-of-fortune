@@ -1,7 +1,6 @@
 package ui.panels;
 
 import ui.GameUI;
-
 import javax.swing.*;
 import java.awt.*;
 import java.io.File;
@@ -48,14 +47,26 @@ public class TopPanel extends JPanel {
         phrasePanel.add(phraseLabel, BorderLayout.CENTER);
         add(phrasePanel, BorderLayout.CENTER);
 
-        // Buttons panel
+        // Buttons panel (Save, Load, Exit)
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         buttonPanel.setBackground(Color.WHITE);
 
         JButton saveButton = new JButton("💾 Save");
         JButton loadButton = new JButton("📂 Load");
         JButton exitButton = new JButton("❌ Exit");
+        
+        
+        JButton syncButton = new JButton("📡 Sync");
+        syncButton.addActionListener(e -> {
+            if (GameUI.serverInstance != null) {
+                GameUI.serverInstance.broadcastGameState(gameUI.getGame());
+                JOptionPane.showMessageDialog(this, "✅ Estado reenviado a todos los clientes.");
+            } else {
+                JOptionPane.showMessageDialog(this, "❌ No hay servidor activo.", "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        });
 
+        
         // Save action
         saveButton.addActionListener(e -> {
             String saveName = JOptionPane.showInputDialog(this, "Enter a name for the saved game:");
@@ -85,21 +96,47 @@ public class TopPanel extends JPanel {
             }
         });
 
-
         // Exit action
         exitButton.addActionListener(e -> System.exit(0));
 
         buttonPanel.add(saveButton);
         buttonPanel.add(loadButton);
         buttonPanel.add(exitButton);
+        buttonPanel.add(syncButton); 
 
-        add(buttonPanel, BorderLayout.SOUTH);
+
+        // Status label (host/client info)
+        JPanel connectionPanel = new JPanel(new BorderLayout());
+        connectionPanel.setBackground(Color.WHITE);
+
+        JLabel connectionLabel = new JLabel("Status...");
+        connectionLabel.setFont(new Font("Arial", Font.PLAIN, 12));
+        connectionLabel.setHorizontalAlignment(SwingConstants.RIGHT);
+        connectionLabel.setBorder(BorderFactory.createEmptyBorder(0, 0, 5, 10));
+        connectionPanel.add(connectionLabel, BorderLayout.EAST);
+
+        // Registrar el label en GameUI para que pueda actualizarlo dinámicamente
+        gameUI.setStatusLabel(connectionLabel);
+
+        // Contenedor que incluye botones arriba y estado debajo
+        JPanel bottomContainer = new JPanel(new BorderLayout());
+        bottomContainer.setBackground(Color.WHITE);
+        bottomContainer.add(buttonPanel, BorderLayout.CENTER);
+        bottomContainer.add(connectionPanel, BorderLayout.SOUTH);
+
+        // Añadir al sur del panel principal
+        add(bottomContainer, BorderLayout.SOUTH);
 
         updatePhraseLabel();
     }
 
     public void updatePhraseLabel() {
         char[] revealed = gameUI.getRevealed();
+        if (revealed == null) {
+            phraseLabel.setText("Waiting for phrase...");
+            return;
+        }
+
         StringBuilder sb = new StringBuilder("<html><body style='width:600px; text-align:center; font-family:monospace;'>");
         for (char c : revealed) {
             if (c == ' ') {
@@ -111,4 +148,5 @@ public class TopPanel extends JPanel {
         sb.append("</body></html>");
         phraseLabel.setText(sb.toString());
     }
+
 }

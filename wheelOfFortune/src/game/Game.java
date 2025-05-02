@@ -53,9 +53,12 @@ public class Game {
                     instance = new Game(gameWindow);
                 }
             }
+        } else if (gameWindow != null && instance.gameWindow == null) {
+            instance.setGameWindow(gameWindow); // solo si no está definido aún
         }
         return instance;
     }
+
 
     private void loadPhrasesFromFile(String fileName) {
         File file = new File(fileName);
@@ -298,14 +301,21 @@ public class Game {
     }
 
     public GameState createGameState() {
+        if (revealed == null) {
+            System.out.println("⚠️ WARNING: createGameState() called before revealed was initialized.");
+            return null; // o lanza excepción controlada si prefieres
+        }
+
         List<PlayerState> playerStates = new ArrayList<>();
         for (Player player : players) {
             playerStates.add(new PlayerState(player.getName(), player.getAvatarKey(), player.getMoney()));
         }
+
         List<Character> revealedList = new ArrayList<>();
         for (char c : revealed) {
             revealedList.add(c);
         }
+
         return new GameState(playerStates, phrase, revealedList, usedLetters, currentPlayerIndex);
     }
 
@@ -368,6 +378,9 @@ public class Game {
         }
     }
 
+    public List<Character> getUsedLetters() {
+        return usedLetters;
+    }
 
 
 }

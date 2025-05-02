@@ -35,6 +35,11 @@ public class SpinCommand implements Command {
 
         // Realizar el giro
         gameUI.spinWheel();
+        gameUI.refreshPlayerCards();
+        if (GameUI.serverInstance != null) {
+            GameUI.serverInstance.broadcastGameState(gameUI.getGame());
+        }
+
 
         // Calcular el número de mensajes generados
         int finalMessageCount = gameUI.getBottomPanel().getMessageCount();
@@ -55,6 +60,12 @@ public class SpinCommand implements Command {
 
         // Eliminar todos los mensajes generados por el último giro
         clearAllMessages(gameUI, messageCount);
+        
+        gameUI.refreshPlayerCards();
+        if (GameUI.serverInstance != null) {
+            GameUI.serverInstance.broadcastGameState(gameUI.getGame());
+        }
+
 
         gameUI.updateUIState();
         gameUI.getCenterPanel().refreshButtons();

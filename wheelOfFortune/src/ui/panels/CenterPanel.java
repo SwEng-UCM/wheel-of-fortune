@@ -23,7 +23,10 @@ public class CenterPanel extends JPanel {
     private JButton solveButton;
 
     private JPanel walletPanel;
+    private JLabel[] walletLabels;
     private List<JLabel> budgetLabels;
+    private JPanel playersPanel;
+
 
     public CenterPanel(GameUI gameUI) {
         this.gameUI = gameUI;
@@ -194,7 +197,13 @@ public class CenterPanel extends JPanel {
     }
 
     public void updateCurrentPlayer() {
-        Player currentPlayer = gameUI.getGame().getPlayers().get(gameUI.getGame().getCurrentPlayerIndex());
+        List<Player> players = gameUI.getGame().getPlayers();
+        if (players == null || players.isEmpty()) {
+            currentPlayerLabel.setText("Waiting for host...");
+            return;
+        }
+
+        Player currentPlayer = players.get(gameUI.getGame().getCurrentPlayerIndex());
         String displayName = currentPlayer.getName();
         if (currentPlayer instanceof players.AutomaticPlayer) {
             displayName = "Automatic: " + displayName;
@@ -204,17 +213,91 @@ public class CenterPanel extends JPanel {
         currentPlayerLabel.setForeground(new Color(34, 34, 34));
         currentPlayerLabel.setOpaque(false);
         currentPlayerLabel.setHorizontalAlignment(SwingConstants.CENTER);
-
     }
 
     public void updateWallets() {
         List<Player> players = gameUI.getGame().getPlayers();
+        if (walletLabels == null || players == null || players.isEmpty()) return;
+
         for (int i = 0; i < players.size(); i++) {
-            Player player = players.get(i);
-            JLabel budgetLabel = budgetLabels.get(i);
-            budgetLabel.setText("$" + player.getBudget());
+            if (i < walletLabels.length) {
+                walletLabels[i].setText(players.get(i).getName() + ": $" + players.get(i).getMoney());
+            }
         }
     }
+
+    
+    public void rebuildWalletLabelsFromPlayers() {
+        List<Player> players = gameUI.getGame().getPlayers();
+        if (players == null || players.isEmpty()) return;
+
+        removeAll(); // limpia los componentes actuales
+
+        setLayout(new GridLayout(players.size(), 1));
+
+        walletLabels = new JLabel[players.size()];
+        for (int i = 0; i < players.size(); i++) {
+            Player p = players.get(i);
+            walletLabels[i] = new JLabel(p.getName() + ": $" + p.getMoney());
+            walletLabels[i].setFont(new Font("Arial", Font.BOLD, 16));
+            walletLabels[i].setHorizontalAlignment(SwingConstants.CENTER);
+            add(walletLabels[i]);
+        }
+
+        revalidate();
+        repaint();
+    }
+    
+    public void renderPlayerCards(List<Player> players) {
+        if (players == null || players.isEmpty()) return;
+
+        if (playersPanel != null) {
+            remove(playersPanel); // eliminar el panel anterior si ya existe
+        }
+
+        playersPanel = new JPanel(new GridLayout(1, players.size(), 10, 10));
+        playersPanel.setBackground(Color.WHITE);
+        playersPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
+        for (int i = 0; i < players.size(); i++) {
+            Player p = players.get(i);
+
+            JPanel card = new JPanel();
+            card.setLayout(new BoxLayout(card, BoxLayout.Y_AXIS));
+            card.setBackground(i % 2 == 0 ? new Color(173, 216, 230) : new Color(255, 160, 122)); // azul claro y salmón
+            card.setBorder(BorderFactory.createLineBorder(Color.BLACK, 2));
+            card.setPreferredSize(new Dimension(120, 150));
+
+            JLabel avatarLabel = new JLabel();
+            avatarLabel.setIcon(new ImageIcon(p.getAvatarImage().getScaledInstance(60, 60, Image.SCALE_SMOOTH)));
+            avatarLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+            JLabel nameLabel = new JLabel(p.getName());
+            nameLabel.setFont(new Font("Arial", Font.BOLD, 16));
+            nameLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+            JLabel moneyLabel = new JLabel("$" + p.getMoney());
+            moneyLabel.setFont(new Font("Arial", Font.BOLD, 14));
+            moneyLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+            moneyLabel.setForeground(Color.BLACK);
+
+            card.add(Box.createVerticalStrut(10));
+            card.add(avatarLabel);
+            card.add(Box.createVerticalStrut(10));
+            card.add(nameLabel);
+            card.add(Box.createVerticalStrut(5));
+            card.add(moneyLabel);
+
+            playersPanel.add(card);
+        }
+
+        add(playersPanel, BorderLayout.CENTER);
+        revalidate();
+        repaint();
+    }
+
+
+
 
     public void refreshButtons() {
         boolean gameOver = gameUI.isGameOver();

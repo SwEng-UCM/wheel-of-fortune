@@ -1,6 +1,7 @@
 package ui;
 
 import game.*;
+import model.state.GameState;
 import players.Player;
 import ui.panels.TopPanel;
 import ui.panels.CenterPanel;
@@ -19,6 +20,14 @@ import java.util.List;
 
 public class GameUI extends JFrame {
     private Game game;
+    
+    private boolean clientMode = false;
+    private String clientHostInfo = "";
+    private int connectedClients = 0;
+    private JLabel statusLabel;
+    public static network.GameServer serverInstance; // referencia pública para el host
+
+
 
     // Variables de estado del juego
     private String selectedPhrase;
@@ -44,124 +53,30 @@ public class GameUI extends JFrame {
     }
 
     public GameUI() {
-        super("Wheel of Fortune Game");
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setLayout(new BorderLayout(10, 10));
-        setSize(900, 600);
-        
-        System.out.println("[GameUI] Inicializando GameUI...");
-
-        this.game = Game.getInstance(this);
-        
-        usedLettersPanel = new UsedLettersPanel();
-        
-     // --- Add a custom-styled menu bar with a settings menu ---
-        JMenuBar menuBar = new JMenuBar();
-        menuBar.setBackground(Color.WHITE);  // SteelBlue: a medium–dark blue
-        menuBar.setForeground(Color.WHITE);
-
-        // Create the Settings menu and add a gear icon.
-        JMenu settingsMenu = new JMenu("Settings");
-        settingsMenu.setFont(new Font("Arial", Font.BOLD, 14));
-        settingsMenu.setForeground(Color.WHITE);
-        settingsMenu.setOpaque(true);
-        settingsMenu.setBackground(new Color(70, 130, 180));
-
-        // Create the AI Difficulty menu item.
-        JMenuItem aiSettingsItem = new JMenuItem("AI Difficulty");
-        aiSettingsItem.setFont(new Font("Arial", Font.BOLD, 14));
-        aiSettingsItem.setBackground(new Color(100, 149, 237));  // CornflowerBlue for a lighter blue effect
-        aiSettingsItem.setForeground(Color.WHITE);
-        aiSettingsItem.addActionListener(e -> showAIStrategySelection());
-
-        // Add the menu item to the Settings menu, then add the menu to the menu bar.
-        settingsMenu.add(aiSettingsItem);
-        menuBar.add(settingsMenu);
-        setJMenuBar(menuBar);
-
-
-        String[] options = {"Load saved game", "Create new game"};
-        int choice = JOptionPane.showOptionDialog(
-            this,
-            "Do you want to load a saved game or create a new one?",
-            "Load or New Game",
-            JOptionPane.YES_NO_OPTION,
-            JOptionPane.QUESTION_MESSAGE,
-            null,
-            options,
-            options[0]
-        );
-
-        boolean isLoaded = false;
-        if (choice == 0) {
-            JFileChooser fileChooser = new JFileChooser("saved_games");
-            fileChooser.setDialogTitle("Select a saved game to load");
-            fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-            int result = fileChooser.showOpenDialog(this);
-
-            if (result == JFileChooser.APPROVE_OPTION) {
-                File selectedFile = fileChooser.getSelectedFile();
-                String filename = selectedFile.getName();
-
-                if (filename.endsWith(".json")) {
-                	System.out.println("[GameUI] Archivo seleccionado para cargar: " + filename);
-                    String saveName = filename.substring(0, filename.length() - 5);
-                    game.loadGameState(saveName, this);
-                    this.selectedPhrase = game.getSelectedPhrase();
-                    this.revealed = game.getRevealed().clone();
-                    synchronizeRevealed();
-                    isLoaded = true;
-                    System.out.println("[GameUI] Partida cargada. Jugadores:");
-                } else {
-                	System.out.println("[GameUI] Archivo no válido. Creando nueva partida.");
-                    JOptionPane.showMessageDialog(this, "Invalid file. Starting a new game.");
-                    registerPlayers();
-                    initGameState();
-                }
-            } else {
-            	System.out.println("[GameUI] No se seleccionó archivo. Creando nueva partida.");
-                JOptionPane.showMessageDialog(this, "No file selected. Starting a new game.");
-                registerPlayers();
-                initGameState();
-            }
-        } else {
-        	System.out.println("[GameUI] Se eligió crear nueva partida.");
-            registerPlayers();
-            initGameState();
-        }
-
-        topPanel = new TopPanel(this);
-        add(topPanel, BorderLayout.NORTH);
-
-        centerPanel = new CenterPanel(this);
-        add(centerPanel, BorderLayout.CENTER);
-
-        bottomPanel = new BottomPanel(this);
-       
-        JPanel southContainer = new JPanel(new BorderLayout());
-        southContainer.add(bottomPanel, BorderLayout.CENTER);
-        southContainer.add(usedLettersPanel, BorderLayout.SOUTH);
-        add(southContainer, BorderLayout.SOUTH);
-
-        updateUIState();
-        setLocationRelativeTo(null);
-        setVisible(true);
+        this(false); // El constructor sin parámetros asume que eres host
     }
 
-
-
     private void initGameState() {
-    	System.out.println("[GameUI] Inicializando estado del juego...");
+        System.out.println("[GameUI] Inicializando estado del juego...");
         selectedPhrase = game.getRandomPhrase();
         game.setPhrase(selectedPhrase);
+
         revealed = new char[selectedPhrase.length()];
         for (int i = 0; i < selectedPhrase.length(); i++) {
             revealed[i] = (selectedPhrase.charAt(i) == ' ') ? ' ' : '_';
         }
+
+        game.setRevealed(revealed.clone()); // ✅ CLAVE para evitar el null
         hasSpun = false;
         gameOver = false;
         currentSpinValue = 0;
+
+        // ✅ solo aquí ya está todo listo para enviar
+        if (serverInstance != null) {
+            serverInstance.broadcastGameState(game);
+        }
     }
+
     
     public void synchronizeUsedLetters(List<Character> usedLetters) {
         usedLettersPanel.clearLetters();
@@ -228,6 +143,9 @@ public class GameUI extends JFrame {
         if (centerPanel != null) centerPanel.updateCurrentPlayer();
         if (centerPanel != null) centerPanel.updateWallets();
         checkAutomaticTurn();
+        
+        updateStatusLabel();
+
     }
 
     public void spinWheel() {
@@ -339,10 +257,16 @@ public class GameUI extends JFrame {
             updateUIState();
 
         }
+        
 
         hasSpun = false;
         game.setRevealed(revealed.clone());
+        refreshPlayerCards();
         updateUIState();
+        if (serverInstance != null) {
+            serverInstance.broadcastGameState(game);
+        }
+
         return occurrences > 0;
     }
 
@@ -363,6 +287,7 @@ public class GameUI extends JFrame {
         }
 
         currentPlayer.addMoney(-vowelPrice);
+        refreshPlayerCards();
         bottomPanel.appendMessage("🛒 " + currentPlayer.getName() + " bought the vowel '" + vowel + "' for $" + vowelPrice);
 
         char guessedVowel = vowel.charAt(0);
@@ -387,8 +312,13 @@ public class GameUI extends JFrame {
         } else {
             bottomPanel.appendMessage("❌ The vowel '" + guessedVowel + "' is NOT in the phrase.", ColorPalette.ERROR);
         }
-
+        
+        
         updateUIState();
+        if (serverInstance != null) {
+            serverInstance.broadcastGameState(game);
+        }
+
     }
 
     public void attemptSolve(String solution) {
@@ -409,6 +339,11 @@ public class GameUI extends JFrame {
             game.nextTurn();
             updateUIState();
         }
+        
+        if (serverInstance != null) {
+            serverInstance.broadcastGameState(game);
+        }
+
     }
 
     public void addUsedLetter(char letter) {
@@ -437,7 +372,7 @@ public class GameUI extends JFrame {
             JPanel namePanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
             namePanel.add(new JLabel("Enter name for Player " + (i + 1) + ":"));
             JTextField nameField = new JTextField(20);
-            namePanel.add(nameField);
+            namePanel.add(nameField);	
             panel.add(namePanel);
 
             JPanel autoPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
@@ -503,6 +438,9 @@ public class GameUI extends JFrame {
             player.setAvatar(avatars[avatarChoice], avatarFileNames[avatarChoice]);
             game.addPlayer(player);
         }
+        
+        centerPanel.renderPlayerCards(game.getPlayers());
+
     }
 
     public static void main(String[] args) {
@@ -520,18 +458,22 @@ public class GameUI extends JFrame {
         Player player = game.getPlayers().get(playerIndex);
         int moneyDiff = previousPlayerMoney - player.getMoney();
         player.addMoney(moneyDiff);
+        refreshPlayerCards();
 
         // 4. Actualizar visualmente el juego.
         updateUIState();
     }
+    
     public void synchronizeRevealed() {
         this.revealed = game.getRevealed().clone();
     }
+    
     private void checkAutomaticTurn() {
-        // Get the current player from the game.
-        players.Player currentPlayer = game.getPlayers().get(game.getCurrentPlayerIndex());
+        List<Player> players = game.getPlayers();
+        if (players == null || players.isEmpty()) return;
+
+        Player currentPlayer = players.get(game.getCurrentPlayerIndex());
         if (currentPlayer instanceof players.AutomaticPlayer) {
-            // Delay the automatic turn slightly (1 second) so the UI can update.
             Timer timer = new Timer(1000, e -> {
                 ((players.AutomaticPlayer) currentPlayer).takeTurn(this);
             });
@@ -539,6 +481,7 @@ public class GameUI extends JFrame {
             timer.start();
         }
     }
+
 
     public final class ColorPalette {
         // Darker variants for a more subdued look:
@@ -600,7 +543,186 @@ public class GameUI extends JFrame {
         bottomPanel.appendMessage("AI difficulty set to: " + options[choice], ColorPalette.INFO);
     }
     
-   
+    public GameUI(boolean clientMode) {
+        super("Wheel of Fortune Game");
+        this.clientMode = clientMode;
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLayout(new BorderLayout(10, 10));
+        setSize(900, 600);
+
+        System.out.println("[GameUI] Inicializando GameUI...");
+
+        this.game = Game.getInstance(this);
+        usedLettersPanel = new UsedLettersPanel();
+
+        // Crear la barra superior con menú
+        JMenuBar menuBar = new JMenuBar();
+        menuBar.setBackground(Color.WHITE);
+
+        JMenu settingsMenu = new JMenu("Settings");
+        settingsMenu.setFont(new Font("Arial", Font.BOLD, 14));
+        settingsMenu.setForeground(Color.WHITE);
+        settingsMenu.setOpaque(true);
+        settingsMenu.setBackground(new Color(70, 130, 180));
+
+        JMenuItem aiSettingsItem = new JMenuItem("AI Difficulty");
+        aiSettingsItem.setFont(new Font("Arial", Font.BOLD, 14));
+        aiSettingsItem.setBackground(new Color(100, 149, 237));
+        aiSettingsItem.setForeground(Color.WHITE);
+        aiSettingsItem.addActionListener(e -> showAIStrategySelection());
+
+        settingsMenu.add(aiSettingsItem);
+        menuBar.add(settingsMenu);
+        setJMenuBar(menuBar);
+
+        // Crear paneles antes de lógica del juego
+        topPanel = new TopPanel(this);
+        add(topPanel, BorderLayout.NORTH);
+
+        centerPanel = new CenterPanel(this);
+        add(centerPanel, BorderLayout.CENTER);
+
+        bottomPanel = new BottomPanel(this);
+        JPanel southContainer = new JPanel(new BorderLayout());
+        southContainer.add(bottomPanel, BorderLayout.CENTER);
+        southContainer.add(usedLettersPanel, BorderLayout.SOUTH);
+        add(southContainer, BorderLayout.SOUTH);
+
+        // ✅ SOLO EL HOST crea o carga partida
+        if (!clientMode) {
+            String[] options = {"Load saved game", "Create new game"};
+            int choice = JOptionPane.showOptionDialog(
+                this,
+                "Do you want to load a saved game or create a new one?",
+                "Load or New Game",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.QUESTION_MESSAGE,
+                null,
+                options,
+                options[0]
+            );
+
+            boolean isLoaded = false;
+            if (choice == 0) {
+                JFileChooser fileChooser = new JFileChooser("saved_games");
+                fileChooser.setDialogTitle("Select a saved game to load");
+                fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+                int result = fileChooser.showOpenDialog(this);
+
+                if (result == JFileChooser.APPROVE_OPTION) {
+                    File selectedFile = fileChooser.getSelectedFile();
+                    String filename = selectedFile.getName();
+
+                    if (filename.endsWith(".json")) {
+                        System.out.println("[GameUI] Archivo seleccionado para cargar: " + filename);
+                        String saveName = filename.substring(0, filename.length() - 5);
+                        game.loadGameState(saveName, this);
+                        this.selectedPhrase = game.getSelectedPhrase();
+                        this.revealed = game.getRevealed().clone();
+                        synchronizeRevealed();
+                        synchronizeUsedLetters(game.getUsedLetters());
+                        isLoaded = true;
+                        System.out.println("[GameUI] Partida cargada. Jugadores:");
+
+                        if (serverInstance != null) {
+                            serverInstance.broadcastGameState(game);
+                        }
+
+                    } else {
+                        System.out.println("[GameUI] Archivo no válido. Creando nueva partida.");
+                        JOptionPane.showMessageDialog(this, "Invalid file. Starting a new game.");
+                        registerPlayers();
+                        initGameState();
+
+                        if (serverInstance != null) {
+                            serverInstance.broadcastGameState(game);
+                        }
+                    }
+                } else {
+                    System.out.println("[GameUI] No se seleccionó archivo. Creando nueva partida.");
+                    JOptionPane.showMessageDialog(this, "No file selected. Starting a new game.");
+                    registerPlayers();
+                    initGameState();
+
+                    if (serverInstance != null) {
+                        serverInstance.broadcastGameState(game);
+                    }
+                }
+            } else {
+                System.out.println("[GameUI] Se eligió crear nueva partida.");
+                registerPlayers();
+                initGameState();
+
+                if (serverInstance != null) {
+                    serverInstance.broadcastGameState(game);
+                }
+            }
+        } else {
+            // CLIENTE: Inicializa solo para recibir estado
+            selectedPhrase = "";
+            revealed = new char[0];
+            hasSpun = false;
+            gameOver = false;
+            currentSpinValue = 0;
+            disableInteraction(); // cliente no puede interactuar
+        }
+
+        if (!clientMode) {
+            updateUIState(); // solo el host actualiza de inmediato
+        }
+
+        setLocationRelativeTo(null);
+        setVisible(true);
+    }
+
+
+    
+    public void setClientInfo(String host, int port) {
+        this.clientHostInfo = host + ":" + port;
+        repaint(); // For label update
+    }
+
+    public void setConnectedClients(int count) {
+        this.connectedClients = count;
+        repaint();
+    }
+
+    public void applyRemoteGameState(GameState state) {
+        game.applyGameState(state);
+        synchronizeRevealed();
+        synchronizeUsedLetters(state.getUsedLetters());
+
+        centerPanel.renderPlayerCards(game.getPlayers());
+        
+
+        updateUIState();
+    }
+
+
+    private void disableInteraction() {
+        centerPanel.setEnabled(false);
+        for (java.awt.Component c : centerPanel.getComponents()) {
+            c.setEnabled(false);
+        }
+    }
+    
+    public void setStatusLabel(JLabel label) {
+        this.statusLabel = label;
+    }
+
+    private void updateStatusLabel() {
+        if (statusLabel != null) {
+            if (clientMode) {
+                statusLabel.setText("MODE: Client | Connected to: " + clientHostInfo);
+            } else {
+                statusLabel.setText("MODE: Host | Clients connected: " + connectedClients);
+            }
+        }
+    }
+
+    public void refreshPlayerCards() {
+        centerPanel.renderPlayerCards(game.getPlayers());
+    }
 
 
 
