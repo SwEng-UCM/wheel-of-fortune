@@ -33,6 +33,11 @@ public class GuessLetterCommand implements Command {
 
         // Adivinar la letra
         gameUI.guessLetter(String.valueOf(guessedLetter));
+        gameUI.refreshPlayerCards();
+        if (GameUI.serverInstance != null) {
+            GameUI.serverInstance.broadcastGameState(gameUI.getGame());
+        }
+
 
         int finalMessageCount = gameUI.getBottomPanel().getMessageCount();
         messageCount = finalMessageCount - initialMessageCount;
@@ -52,6 +57,12 @@ public class GuessLetterCommand implements Command {
         }
 
         clearAllMessages(gameUI, messageCount);
+        
+        gameUI.refreshPlayerCards();
+        if (GameUI.serverInstance != null) {
+            GameUI.serverInstance.broadcastGameState(gameUI.getGame());
+        }
+
         gameUI.updateUIState();
     }
 

@@ -29,6 +29,11 @@ public class SolveCommand implements Command {
         wasGameOverBefore = gameUI.isGameOver();
 
         gameUI.attemptSolve(attempt);
+        gameUI.refreshPlayerCards();
+        if (GameUI.serverInstance != null) {
+            GameUI.serverInstance.broadcastGameState(gameUI.getGame());
+        }
+
 
         int finalMessageCount = gameUI.getBottomPanel().getMessageCount();
         messageCount = finalMessageCount - initialMessageCount;
@@ -44,6 +49,12 @@ public class SolveCommand implements Command {
         game.setCurrentPlayerIndex(currentPlayerIndex);
 
         clearAllMessages(gameUI, messageCount);
+        
+        gameUI.refreshPlayerCards();
+        if (GameUI.serverInstance != null) {
+            GameUI.serverInstance.broadcastGameState(gameUI.getGame());
+        }
+
         gameUI.updateUIState();
     }
 

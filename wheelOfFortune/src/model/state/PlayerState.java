@@ -1,6 +1,8 @@
 package model.state;
 
-public class PlayerState {
+import java.io.Serializable;
+
+public class PlayerState implements Serializable{
     private String name;
     private String avatarFileName;
     private int money;

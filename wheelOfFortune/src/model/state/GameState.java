@@ -1,8 +1,9 @@
 package model.state;
 
 import java.util.List;
+import java.io.Serializable;
 
-public class GameState {
+public class GameState implements Serializable{
     private List<PlayerState> players;
     private String wordToGuess;
     private List<Character> revealedLetters;
