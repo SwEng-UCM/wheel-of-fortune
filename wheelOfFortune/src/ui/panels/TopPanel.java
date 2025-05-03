@@ -60,10 +60,15 @@ public class TopPanel extends JPanel {
         syncButton.addActionListener(e -> {
             if (GameUI.serverInstance != null) {
                 GameUI.serverInstance.broadcastGameState(gameUI.getGame());
+                int count = GameUI.serverInstance.getClientCount();
+                gameUI.setConnectedClients(count);
+                gameUI.updateStatusLabel();
                 JOptionPane.showMessageDialog(this, "✅ Estado reenviado a todos los clientes.");
             } else {
                 JOptionPane.showMessageDialog(this, "❌ No hay servidor activo.", "Error", JOptionPane.ERROR_MESSAGE);
             }
+            
+            
         });
 
         
@@ -149,4 +154,6 @@ public class TopPanel extends JPanel {
         phraseLabel.setText(sb.toString());
     }
 
+    
+    
 }

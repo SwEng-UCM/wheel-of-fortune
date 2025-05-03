@@ -2,11 +2,14 @@ package network;
 
 import game.Game;
 import model.state.GameState;
+import ui.GameUI;
 
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.*;
+
+import javax.swing.SwingUtilities;
 
 public class GameServer {
     private final int port;
@@ -31,6 +34,12 @@ public class GameServer {
                         MessageSender sender = new MessageSender(clientSocket);
                         synchronized (clients) {
                             clients.add(sender);
+                            if (gameUI != null) {
+                                SwingUtilities.invokeLater(() ->
+                                    gameUI.updateClientStatusLabel(clients.size())
+                                );
+                            }
+
                         }
 
                         // Enviar estado si ya está listo
@@ -93,6 +102,15 @@ public class GameServer {
             System.out.println("❌ Error enviando estado al cliente: " + e.getMessage());
         }
     }
+    
+ // GameServer.java
+    private GameUI gameUI;
+
+    public GameServer(int port, GameUI gameUI) {
+        this.port = port;
+        this.gameUI = gameUI;
+    }
+
 
 }
 

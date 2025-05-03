@@ -145,6 +145,11 @@ public class GameUI extends JFrame {
         checkAutomaticTurn();
         
         updateStatusLabel();
+        
+        if (!clientMode && centerPanel != null) {
+            centerPanel.enableButtons(); // solo el host puede tocar botones
+        }
+
 
     }
 
@@ -700,17 +705,17 @@ public class GameUI extends JFrame {
 
 
     private void disableInteraction() {
-        centerPanel.setEnabled(false);
-        for (java.awt.Component c : centerPanel.getComponents()) {
-            c.setEnabled(false);
+        if (centerPanel != null) {
+            centerPanel.disableButtons(); // esto sí desactiva solo los botones, de forma controlada
         }
     }
+
     
     public void setStatusLabel(JLabel label) {
         this.statusLabel = label;
     }
 
-    private void updateStatusLabel() {
+    public void updateStatusLabel() {
         if (statusLabel != null) {
             if (clientMode) {
                 statusLabel.setText("MODE: Client | Connected to: " + clientHostInfo);
@@ -724,6 +729,11 @@ public class GameUI extends JFrame {
         centerPanel.renderPlayerCards(game.getPlayers());
     }
 
+    public void updateClientStatusLabel(int count) {
+        if (statusLabel != null) {
+            statusLabel.setText("Host | Clients Connected: " + count);
+        }
+    }
 
 
 }

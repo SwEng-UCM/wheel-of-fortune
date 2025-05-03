@@ -297,6 +297,21 @@ public class CenterPanel extends JPanel {
     }
 
 
+    public void disableButtons() {
+        spinButton.setEnabled(false);
+        guessButton.setEnabled(false);
+        buyVowelButton.setEnabled(false);
+        solveButton.setEnabled(false);
+        undoButton.setEnabled(false);
+    }
+
+    public void enableButtons() {
+        spinButton.setEnabled(true);
+        guessButton.setEnabled(true);
+        buyVowelButton.setEnabled(true);
+        solveButton.setEnabled(true);
+        undoButton.setEnabled(true);
+    }
 
 
     public void refreshButtons() {
