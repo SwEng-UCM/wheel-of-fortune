@@ -41,7 +41,10 @@ public class Player {
     }
 
     public void addMoney(int amount) {
-        this.money += amount;
+        money += amount;
+        if (money < 0) {
+            money = 0;
+        }
     }
 
     public int getBudget() {

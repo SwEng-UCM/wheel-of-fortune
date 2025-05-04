@@ -190,6 +190,33 @@ public class GameUI extends JFrame {
                     bottomPanel.appendMessage("🔄 You landed on EXTRA TURN! You won't lose your turn even if you guess wrong.", ColorPalette.INFO);
                     hasExtraTurn = true;
                 }
+                if (sliceResult.equalsIgnoreCase("Mystery Prize")) {
+                    int effect = new java.util.Random().nextInt(4); // valor entre 0 y 4
+                    Player currentPlayer = game.getPlayers().get(game.getCurrentPlayerIndex());
+
+                    switch (effect) {
+                    case 0:
+                        currentPlayer.addMoney(300);
+                        bottomPanel.appendMessage("🎁 Mystery Prize: You won $300!", ColorPalette.SUCCESS);
+                        break;
+                    case 1:
+                        currentPlayer.addMoney(-100);
+                        bottomPanel.appendMessage("💣 Mystery Prize: You lost $100!", ColorPalette.ERROR);
+                        break;
+                    case 2:
+                        hasExtraTurn = true;
+                        bottomPanel.appendMessage("🔄 Mystery Prize: You gained an EXTRA TURN! You won’t lose your turn if you guess wrong.", ColorPalette.INFO);
+                        break;
+                    case 3:
+                        bottomPanel.appendMessage("⛔ Mystery Prize: You lost your turn!", ColorPalette.ERROR);
+                        game.nextTurn();
+                        updateUIState();
+                        hasSpun = false;
+                        return;
+                }
+
+                }
+
 
 
                 hasSpun = true;
