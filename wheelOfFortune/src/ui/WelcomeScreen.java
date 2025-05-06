@@ -1,6 +1,10 @@
 package ui;
 
 import javax.swing.*;
+
+import network.GameClient;
+import network.GameServer;
+
 import java.awt.*;
 import ui.GameUI;
 
@@ -43,9 +47,13 @@ public class WelcomeScreen extends JFrame {
 
         // When clicked, close this screen and open the main GameUI
         startButton.addActionListener(e -> {
-            dispose();
-            new GameUI(); 
+            dispose(); 
+
+            new Thread(() -> main.Launcher.main(null)).start();
         });
+
+
+
 
         // --- EXIT BUTTON ---
         JButton exitButton = new JButton("Exit");
