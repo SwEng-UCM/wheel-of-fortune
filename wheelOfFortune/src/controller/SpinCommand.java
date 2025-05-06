@@ -1,42 +1,48 @@
-package game;
+package controller;
 
 import players.Player;
 import ui.GameUI;
+import game.Game;
 
-public class BuyVowelCommand implements Command {
+public class SpinCommand implements Command {
     private GameUI gameUI;
-    private char vowel;
-    private char[] previousRevealed;
-    private int currentPlayerIndex;
     private int previousMoney;
+    private int currentPlayerIndex;
+    private boolean previousX2Active;
+    private boolean previousHasSpun;
+    private int previousSpinValue;
     private int messageCount;
 
 
-    public BuyVowelCommand(GameUI gameUI, char vowel) {
+    public SpinCommand(GameUI gameUI) {
         this.gameUI = gameUI;
-        this.vowel = vowel;
     }
 
-    
+
     @Override
     public void execute() {
+        // Guardar el texto completo antes de realizar el giro
         int initialMessageCount = gameUI.getBottomPanel().getMessageCount();
         messageCount = initialMessageCount;
 
         Game game = gameUI.getGame();
         currentPlayerIndex = game.getCurrentPlayerIndex();
         Player currentPlayer = game.getPlayers().get(currentPlayerIndex);
-        previousRevealed = gameUI.getRevealed().clone();
-        previousMoney = currentPlayer.getMoney();
 
-        // Comprar la vocal
-        gameUI.buyVowel(String.valueOf(vowel));
+        previousMoney = currentPlayer.getMoney();
+        previousX2Active = gameUI.isX2Active();
+        previousHasSpun = gameUI.hasSpun();
+        previousSpinValue = gameUI.getCurrentSpinValue();
+
+        // Realizar el giro
+        gameUI.spinWheel();
         gameUI.refreshPlayerCards();
         if (GameUI.serverInstance != null) {
             GameUI.serverInstance.broadcastGameState(gameUI.getGame());
         }
 
 
+        // Calcular el número de mensajes generados
         int finalMessageCount = gameUI.getBottomPanel().getMessageCount();
         messageCount = finalMessageCount - initialMessageCount;
     }
@@ -46,12 +52,14 @@ public class BuyVowelCommand implements Command {
         Game game = gameUI.getGame();
         Player currentPlayer = game.getPlayers().get(currentPlayerIndex);
 
+        // Restaurar el estado del jugador
         currentPlayer.addMoney(previousMoney - currentPlayer.getMoney());
-        game.setRevealed(previousRevealed.clone());
-        gameUI.synchronizeRevealed();
+        gameUI.setHasSpun(previousHasSpun);
+        gameUI.setX2Active(previousX2Active);
+        gameUI.setCurrentSpinValue(previousSpinValue);
+        game.setCurrentPlayerIndex(currentPlayerIndex);
 
-        gameUI.getUsedLettersPanel().removeLetter(vowel);
-
+        // Eliminar todos los mensajes generados por el último giro
         clearAllMessages(gameUI, messageCount);
         
         gameUI.refreshPlayerCards();
@@ -59,7 +67,9 @@ public class BuyVowelCommand implements Command {
             GameUI.serverInstance.broadcastGameState(gameUI.getGame());
         }
 
+
         gameUI.updateUIState();
+        gameUI.getCenterPanel().refreshButtons();
     }
 
 

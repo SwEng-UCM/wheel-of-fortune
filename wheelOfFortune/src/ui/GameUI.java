@@ -1,6 +1,7 @@
 package ui;
 
 import game.*;
+import controller.CommandManager;
 import model.state.GameState;
 import players.Player;
 import ui.panels.TopPanel;
@@ -286,8 +287,14 @@ public class GameUI extends JFrame {
                 game.nextTurn();
             }
 
+            hasSpun = false;
+            game.setRevealed(revealed.clone());
+            refreshPlayerCards();
             updateUIState();
-
+            if (serverInstance != null) {
+               serverInstance.broadcastGameState(game);
+            }
+            return false;
         }
         
 

@@ -1,4 +1,6 @@
-package game;
+package controller;
+
+import controller.Command;
 
 public class CommandManager {
     private Command lastCommand;

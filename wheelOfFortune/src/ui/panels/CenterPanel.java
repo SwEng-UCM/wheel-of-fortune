@@ -1,11 +1,12 @@
 package ui.panels;
 
 import ui.GameUI;
-import game.GuessLetterCommand;
+
+import controller.GuessLetterCommand;
 import players.Player;
-import game.BuyVowelCommand;
-import game.SolveCommand;
-import game.SpinCommand;
+import controller.BuyVowelCommand;
+import controller.SolveCommand;
+import controller.SpinCommand;
 
 import javax.swing.*;
 import java.awt.*;

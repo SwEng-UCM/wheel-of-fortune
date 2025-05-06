@@ -1,20 +1,21 @@
-package game;
+package controller;
 
 import players.Player;
+import game.Game;
 import ui.GameUI;
 
-public class SolveCommand implements Command {
+public class BuyVowelCommand implements Command {
     private GameUI gameUI;
-    private String attempt;
+    private char vowel;
     private char[] previousRevealed;
-    private boolean wasGameOverBefore;
     private int currentPlayerIndex;
+    private int previousMoney;
     private int messageCount;
 
 
-    public SolveCommand(GameUI gameUI, String attempt) {
+    public BuyVowelCommand(GameUI gameUI, char vowel) {
         this.gameUI = gameUI;
-        this.attempt = attempt;
+        this.vowel = vowel;
     }
 
     
@@ -25,10 +26,12 @@ public class SolveCommand implements Command {
 
         Game game = gameUI.getGame();
         currentPlayerIndex = game.getCurrentPlayerIndex();
+        Player currentPlayer = game.getPlayers().get(currentPlayerIndex);
         previousRevealed = gameUI.getRevealed().clone();
-        wasGameOverBefore = gameUI.isGameOver();
+        previousMoney = currentPlayer.getMoney();
 
-        gameUI.attemptSolve(attempt);
+        // Comprar la vocal
+        gameUI.buyVowel(String.valueOf(vowel));
         gameUI.refreshPlayerCards();
         if (GameUI.serverInstance != null) {
             GameUI.serverInstance.broadcastGameState(gameUI.getGame());
@@ -42,11 +45,13 @@ public class SolveCommand implements Command {
     @Override
     public void undo() {
         Game game = gameUI.getGame();
+        Player currentPlayer = game.getPlayers().get(currentPlayerIndex);
 
+        currentPlayer.addMoney(previousMoney - currentPlayer.getMoney());
         game.setRevealed(previousRevealed.clone());
         gameUI.synchronizeRevealed();
-        gameUI.setGameOver(wasGameOverBefore);
-        game.setCurrentPlayerIndex(currentPlayerIndex);
+
+        gameUI.getUsedLettersPanel().removeLetter(vowel);
 
         clearAllMessages(gameUI, messageCount);
         
@@ -61,3 +66,4 @@ public class SolveCommand implements Command {
 
 
 }
+

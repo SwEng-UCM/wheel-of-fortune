@@ -1,47 +1,46 @@
-package game;
+package controller;
+
 
 import players.Player;
+import game.Game;
 import ui.GameUI;
 
-public class SpinCommand implements Command {
+public class GuessLetterCommand implements Command {
     private GameUI gameUI;
-    private int previousMoney;
+    private char guessedLetter;
+    private char[] previousRevealed;
     private int currentPlayerIndex;
-    private boolean previousX2Active;
-    private boolean previousHasSpun;
-    private int previousSpinValue;
+    private int previousMoney;
+    private boolean letterWasUsedBefore;
     private int messageCount;
 
 
-    public SpinCommand(GameUI gameUI) {
+
+    public GuessLetterCommand(GameUI gameUI, char guessedLetter) {
         this.gameUI = gameUI;
+        this.guessedLetter = guessedLetter;
     }
 
 
     @Override
     public void execute() {
-        // Guardar el texto completo antes de realizar el giro
         int initialMessageCount = gameUI.getBottomPanel().getMessageCount();
         messageCount = initialMessageCount;
 
         Game game = gameUI.getGame();
         currentPlayerIndex = game.getCurrentPlayerIndex();
         Player currentPlayer = game.getPlayers().get(currentPlayerIndex);
-
+        previousRevealed = gameUI.getRevealed().clone();
         previousMoney = currentPlayer.getMoney();
-        previousX2Active = gameUI.isX2Active();
-        previousHasSpun = gameUI.hasSpun();
-        previousSpinValue = gameUI.getCurrentSpinValue();
 
-        // Realizar el giro
-        gameUI.spinWheel();
+        // Adivinar la letra
+        gameUI.guessLetter(String.valueOf(guessedLetter));
         gameUI.refreshPlayerCards();
         if (GameUI.serverInstance != null) {
             GameUI.serverInstance.broadcastGameState(gameUI.getGame());
         }
 
 
-        // Calcular el número de mensajes generados
         int finalMessageCount = gameUI.getBottomPanel().getMessageCount();
         messageCount = finalMessageCount - initialMessageCount;
     }
@@ -51,14 +50,14 @@ public class SpinCommand implements Command {
         Game game = gameUI.getGame();
         Player currentPlayer = game.getPlayers().get(currentPlayerIndex);
 
-        // Restaurar el estado del jugador
         currentPlayer.addMoney(previousMoney - currentPlayer.getMoney());
-        gameUI.setHasSpun(previousHasSpun);
-        gameUI.setX2Active(previousX2Active);
-        gameUI.setCurrentSpinValue(previousSpinValue);
-        game.setCurrentPlayerIndex(currentPlayerIndex);
+        game.setRevealed(previousRevealed.clone());
+        gameUI.synchronizeRevealed();
 
-        // Eliminar todos los mensajes generados por el último giro
+        if (!letterWasUsedBefore) {
+            gameUI.getUsedLettersPanel().removeLetter(guessedLetter);
+        }
+
         clearAllMessages(gameUI, messageCount);
         
         gameUI.refreshPlayerCards();
@@ -66,11 +65,8 @@ public class SpinCommand implements Command {
             GameUI.serverInstance.broadcastGameState(gameUI.getGame());
         }
 
-
         gameUI.updateUIState();
-        gameUI.getCenterPanel().refreshButtons();
     }
-
 
 
 }
