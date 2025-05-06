@@ -253,41 +253,65 @@ public class CenterPanel extends JPanel {
         if (players == null || players.isEmpty()) return;
 
         if (playersPanel != null) {
-            remove(playersPanel); // eliminar el panel anterior si ya existe
+            remove(playersPanel);
         }
 
-        playersPanel = new JPanel(new GridLayout(1, players.size(), 10, 10));
+        playersPanel = new JPanel(new GridLayout(1, players.size(), 20, 20));
         playersPanel.setBackground(Color.WHITE);
-        playersPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        playersPanel.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
 
         for (int i = 0; i < players.size(); i++) {
             Player p = players.get(i);
 
-            JPanel card = new JPanel();
-            card.setLayout(new BoxLayout(card, BoxLayout.Y_AXIS));
-            card.setBackground(i % 2 == 0 ? new Color(173, 216, 230) : new Color(255, 160, 122)); // azul claro y salmón
-            card.setBorder(BorderFactory.createLineBorder(Color.BLACK, 2));
-            card.setPreferredSize(new Dimension(120, 150));
+            JPanel card = new JPanel(new BorderLayout(15, 0));
+            card.setBackground(i % 2 == 0 ? new Color(220, 240, 255) : new Color(255, 230, 210));
+            card.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(Color.DARK_GRAY, 1),
+                BorderFactory.createEmptyBorder(10, 10, 10, 10)
+            ));
+            card.setPreferredSize(new Dimension(300, 120));
 
+            // LEFT: avatar con marco
             JLabel avatarLabel = new JLabel();
-            avatarLabel.setIcon(new ImageIcon(p.getAvatarImage().getScaledInstance(60, 60, Image.SCALE_SMOOTH)));
-            avatarLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+            avatarLabel.setHorizontalAlignment(SwingConstants.CENTER);
+            avatarLabel.setVerticalAlignment(SwingConstants.CENTER);
+            if (p.getAvatarImage() != null) {
+                Image scaled = p.getAvatarImage().getScaledInstance(80, 80, Image.SCALE_SMOOTH);
+                avatarLabel.setIcon(new ImageIcon(scaled));
+            } else {
+                avatarLabel.setText("No Avatar");
+                avatarLabel.setFont(new Font("SansSerif", Font.ITALIC, 12));
+            }
+
+            JPanel avatarPanel = new JPanel();
+            avatarPanel.setBackground(Color.WHITE);
+            avatarPanel.setBorder(BorderFactory.createLineBorder(Color.GRAY, 2, true));
+            avatarPanel.add(avatarLabel);
+
+            card.add(avatarPanel, BorderLayout.WEST);
+
+            // RIGHT: nombre y dinero
+            JPanel infoPanel = new JPanel();
+            infoPanel.setLayout(new BoxLayout(infoPanel, BoxLayout.Y_AXIS));
+            infoPanel.setBackground(card.getBackground());
 
             JLabel nameLabel = new JLabel(p.getName());
-            nameLabel.setFont(new Font("Arial", Font.BOLD, 16));
-            nameLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+            nameLabel.setFont(new Font("Segoe UI", Font.BOLD, 18));
+            nameLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
             JLabel moneyLabel = new JLabel("$" + p.getMoney());
-            moneyLabel.setFont(new Font("Arial", Font.BOLD, 14));
-            moneyLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-            moneyLabel.setForeground(Color.BLACK);
+            moneyLabel.setOpaque(true);
+            moneyLabel.setBackground(new Color(46, 204, 113));
+            moneyLabel.setForeground(Color.WHITE);
+            moneyLabel.setFont(new Font("Segoe UI", Font.BOLD, 16));
+            moneyLabel.setBorder(BorderFactory.createEmptyBorder(6, 10, 6, 10));
+            moneyLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-            card.add(Box.createVerticalStrut(10));
-            card.add(avatarLabel);
-            card.add(Box.createVerticalStrut(10));
-            card.add(nameLabel);
-            card.add(Box.createVerticalStrut(5));
-            card.add(moneyLabel);
+            infoPanel.add(nameLabel);
+            infoPanel.add(Box.createVerticalStrut(10));
+            infoPanel.add(moneyLabel);
+
+            card.add(infoPanel, BorderLayout.CENTER);
 
             playersPanel.add(card);
         }

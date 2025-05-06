@@ -3,11 +3,14 @@ package main;
 import network.GameClient;
 import network.GameServer;
 import ui.GameUI;
+import utils.CustomUIManager;
 
 import javax.swing.*;
 
 public class Launcher {
     public static void main(String[] args) {
+    	CustomUIManager.apply();
+
         String[] options = {"Host Game", "Join Game"};
         int choice = JOptionPane.showOptionDialog(
                 null,

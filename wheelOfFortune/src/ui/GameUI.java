@@ -590,6 +590,7 @@ public class GameUI extends JFrame {
         this.clientMode = clientMode;
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new BorderLayout(10, 10));
+        getContentPane().setBackground(Color.WHITE);
         setSize(900, 600);
 
         System.out.println("[GameUI] Inicializando GameUI...");
