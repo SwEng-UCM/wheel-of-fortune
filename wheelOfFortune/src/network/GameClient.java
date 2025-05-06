@@ -8,11 +8,12 @@ import java.net.Socket;
 import java.util.TimerTask;
 import java.util.Timer;
 
-
 public class GameClient {
     private final String host;
     private final int port;
     private GameUI gameUI;
+    private MessageSender sender;
+    
 
     public GameClient(String host, int port) {
         this.host = host;
@@ -22,12 +23,14 @@ public class GameClient {
     public void start() {
         try {
             Socket socket = new Socket(host, port);
+            this.sender = new MessageSender(socket);
             MessageReceiver receiver = new MessageReceiver(socket);
             System.out.println("[Client] Connected to server at " + host + ":" + port);
 
             try {
                 SwingUtilities.invokeAndWait(() -> {
                     gameUI = new GameUI(true);
+                    gameUI.setClient(this);
                     gameUI.setClientInfo(host, port);
                 });
             } catch (Exception e) {
@@ -36,37 +39,39 @@ public class GameClient {
                 return;
             }
 
-
-            // Añadimos temporizador de espera de estado
-            Timer timeout = new Timer();
-            timeout.schedule(new TimerTask() {
-                @Override
-                public void run() {
-                    if (gameUI.getGame().getPlayers().isEmpty()) {
-                        System.out.println("[Client] Still no game state after 3s... sending request ping.");
-                        // Aquí podrías implementar un sistema de ping si tuvieras otro canal de comunicación.
-                        // Por ahora solo lo mostramos.
-                    }
-                }
-            }, 3000); // 3 segundos
-
             // Bucle principal de recepción
-            while (true) { 	
+            while (true) {     
                 Object obj = receiver.receive();
                 if (obj instanceof NetworkMessage message) {
-                    GameState state = message.getGameState();
-                    SwingUtilities.invokeLater(() -> {
-                        System.out.println("[Client] Recibido estado del servidor.");
-                        gameUI.applyRemoteGameState(state);
-                    });
+                    if (message.isGameState()) {
+                        GameState state = message.getGameState();
+                        SwingUtilities.invokeLater(() -> {
+                            System.out.println("[Client] Recibido estado del servidor.");
+                            gameUI.applyRemoteGameState(state);
+                        });
+                    } else if (message.isChatMessage()) {
+                        ChatMessage chatMsg = message.getChatMessage();
+                        SwingUtilities.invokeLater(() -> {
+                            gameUI.displayChatMessage(chatMsg);
+                        });
+                    }
                 }
-
             }
         } catch (Exception e) {
             e.printStackTrace();
-            javax.swing.JOptionPane.showMessageDialog(null, "Connection lost to server.");
+            JOptionPane.showMessageDialog(null, "Connection lost to server.");
             System.exit(1);
         }
     }
 
+    public void sendChatMessage(String message) {
+        try {
+            ChatMessage chatMsg = new ChatMessage(message, false);
+            sender.send(new NetworkMessage(chatMsg));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+    
+    
 }

@@ -22,10 +22,13 @@ public class Launcher {
 
         if (choice == 0) {
             // Host
-        	GameServer server = new GameServer(5000);
-        	GameUI.serverInstance = server; // <--- CONEXIÓN
-        	server.start();
-        	SwingUtilities.invokeLater(() -> new GameUI());
+        	SwingUtilities.invokeLater(() -> {
+        	    GameUI ui = new GameUI(); // Crea la UI primero
+        	    GameServer server = new GameServer(5000, ui); // Le pasas la UI
+        	    GameUI.serverInstance = server;
+        	    server.start();
+        	});
+
 
         } else if (choice == 1) {
             // Client

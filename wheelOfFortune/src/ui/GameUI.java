@@ -3,6 +3,8 @@ package ui;
 import game.*;
 import controller.CommandManager;
 import model.state.GameState;
+import network.ChatMessage;
+import network.GameClient;
 import players.Player;
 import ui.panels.TopPanel;
 import ui.panels.CenterPanel;
@@ -38,6 +40,7 @@ public class GameUI extends JFrame {
     private int currentSpinValue;
     private boolean isX2Active = false;
     private boolean hasExtraTurn = false;
+    private GameClient client;
 
 
     // Paneles
@@ -769,5 +772,20 @@ public class GameUI extends JFrame {
         }
     }
 
+    public TopPanel getTopPanel() {
+        return topPanel;
+    }
+    
+    public void setClient(GameClient client) {
+        this.client = client;
+    }
+
+    public Object getClient() {
+        return client;
+    }
+    
+    public void displayChatMessage(ChatMessage chatMsg) {
+        topPanel.appendToChat(chatMsg);
+    }
 
 }

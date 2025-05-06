@@ -15,15 +15,17 @@ public class GameServer {
     private final int port;
     private final List<MessageSender> clients = new ArrayList<>();
     private ServerSocket serverSocket;
+    private GameUI gameUI;
 
-    public GameServer(int port) {
+    public GameServer(int port, GameUI gameUI) {
         this.port = port;
+        this.gameUI = gameUI;
     }
 
     public void start() {
         new Thread(() -> {
             try {
-                serverSocket = new ServerSocket(port); // ✅ esto es lo que faltaba
+                serverSocket = new ServerSocket(port);
                 System.out.println("[Server] Listening on port " + port);
 
                 while (true) {
@@ -39,25 +41,19 @@ public class GameServer {
                                     gameUI.updateClientStatusLabel(clients.size())
                                 );
                             }
-
                         }
-
-                        // Enviar estado si ya está listo
                         sendStateToClient(sender);
-
                     } catch (Exception e) {
                         System.out.println("❌ Error initializing client: " + e.getMessage());
                         e.printStackTrace();
                     }
                 }
-
             } catch (IOException e) {
                 System.out.println("❌ Error starting server: " + e.getMessage());
                 e.printStackTrace();
             }
         }).start();
     }
-
 
     public void broadcastGameState(Game game) {
         GameState state = game.createGameState();
@@ -67,6 +63,14 @@ public class GameServer {
         }
 
         NetworkMessage msg = new NetworkMessage(state);
+        broadcastMessage(msg);
+    }
+
+    public void broadcastChatMessage(ChatMessage chatMessage) {
+        broadcastMessage(new NetworkMessage(chatMessage));
+    }
+
+    private void broadcastMessage(NetworkMessage msg) {
         synchronized (clients) {
             Iterator<MessageSender> iterator = clients.iterator();
             while (iterator.hasNext()) {
@@ -80,7 +84,6 @@ public class GameServer {
             }
         }
     }
-
 
     public int getClientCount() {
         synchronized (clients) {
@@ -102,15 +105,4 @@ public class GameServer {
             System.out.println("❌ Error enviando estado al cliente: " + e.getMessage());
         }
     }
-    
- // GameServer.java
-    private GameUI gameUI;
-
-    public GameServer(int port, GameUI gameUI) {
-        this.port = port;
-        this.gameUI = gameUI;
-    }
-
-
 }
-
